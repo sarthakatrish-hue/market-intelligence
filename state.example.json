@@ -1,0 +1,12 @@
+{
+  "pending_queue": [],
+  "rejection_log": [],
+  "health": {
+    "entity_count": 0,
+    "regulatory_count": 0,
+    "event_count": 0,
+    "partner_count": 0,
+    "market_signal_count": 0,
+    "last_ingest": null
+  }
+}

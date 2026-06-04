@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Query Intent Router — Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f1f6fa;
+    --ink: #111111;
+    --body: #2a2a2a;
+    --orange: #ce3e00;
+    --orange-soft: #fff3ec;
+    --green: #22a06b;
+    --border: #E8E8E8;
+    --rule: #ECECEC;
+    --muted: #888888;
+    --muted-soft: #AAAAAA;
+    --paper: #FFFFFF;
+    --ink-04: rgba(17,17,17,0.04);
+    --orange-06: rgba(206,62,0,0.06);
+    --sans: "Lexend Deca", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 56px 32px 96px; }
+
+  /* ── Masthead ──────────────────────────────────────────── */
+  .mast {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; padding: 0 0 14px;
+    border-bottom: 0.5px solid var(--ink);
+    margin-bottom: 28px; flex-wrap: wrap;
+  }
+  .brand {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.18em; color: var(--ink);
+  }
+  .brand .sq { width: 8px; height: 8px; background: var(--orange); display: inline-block; }
+  .dateline { font-size: 10.5px; letter-spacing: 0.1em; color: var(--muted); }
+  h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 500; letter-spacing: -0.022em;
+    margin: 6px 0 14px; line-height: 1.15;
+  }
+  .lede {
+    font-size: 16px; line-height: 1.55; color: var(--body);
+    max-width: 78ch; margin: 0 0 38px;
+  }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  /* ── Section heads ──────────────────────────────────────── */
+  h2 {
+    font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--orange); margin: 56px 0 18px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  h3 {
+    font-size: 16px; font-weight: 600; margin: 24px 0 10px;
+    color: var(--ink); letter-spacing: -0.005em;
+  }
+
+  /* ── Generic prose ──────────────────────────────────────── */
+  p { font-size: 14px; line-height: 1.6; color: var(--body); margin: 0 0 12px; }
+  p:last-child { margin-bottom: 0; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px; background: var(--ink-04);
+    padding: 1px 6px; border: 1px solid var(--border); border-radius: 3px;
+    color: var(--ink);
+  }
+
+  /* ── Before/after pair ──────────────────────────────────── */
+  .pair {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    margin-bottom: 24px;
+  }
+  .pair-card {
+    background: var(--paper); border: 1px solid var(--border);
+    padding: 18px 20px;
+  }
+  .pair-card .kicker {
+    font-size: 9.5px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .pair-card.before .kicker { color: #c62828; }
+  .pair-card.after  .kicker { color: var(--green); }
+  .pair-card p { font-size: 13.5px; color: var(--body); }
+
+  /* ── Routing tree (SVG) ─────────────────────────────────── */
+  .tree-wrap {
+    background: var(--paper); border: 1px solid var(--border);
+    padding: 28px 20px; overflow-x: auto;
+  }
+  svg.tree { display: block; margin: 0 auto; max-width: 100%; }
+  text { font-family: var(--sans); }
+
+  /* ── Intent table ───────────────────────────────────────── */
+  table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13px; line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  th, td {
+    text-align: left; padding: 10px 14px;
+    border-top: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th {
+    font-size: 9.5px; font-weight: 600;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); border-top: 0.5px solid var(--ink);
+    border-bottom: 0.5px solid var(--ink);
+    background: var(--ink-04);
+  }
+  td .pill {
+    display: inline-block; padding: 1px 7px;
+    border: 1px solid var(--border); background: var(--ink-04);
+    font-size: 11px; color: var(--ink);
+    font-family: ui-monospace, monospace;
+  }
+  td .pill.orange { color: var(--orange); border-color: var(--orange); background: var(--orange-06); }
+  td .pill.green  { color: var(--green); border-color: #b3e3cc; background: #f0faf5; }
+
+  /* ── Card mockups ───────────────────────────────────────── */
+  .cards-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  }
+  .mock {
+    background: var(--paper); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 1px 2px rgba(17,17,17,0.03), 0 6px 18px rgba(17,17,17,0.035);
+  }
+  .mock-stripe { height: 3px; background: var(--ink); }
+  .mock-stripe.orange { background: var(--orange); }
+  .mock-body { padding: 16px 18px; }
+  .mock-body p { font-size: 13px; line-height: 1.55; margin: 0 0 8px; }
+  .mock-body p:last-child { margin: 0; }
+  .mock-body .eyebrow {
+    font-size: 9.5px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--orange); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .mock-body .eyebrow::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .mock-body strong { color: var(--ink); font-weight: 700; }
+  .mock-body ul { margin: 4px 0 0; padding-left: 18px; }
+  .mock-body li { font-size: 12.5px; line-height: 1.55; margin-bottom: 2px; color: var(--body); }
+  .mock-label {
+    font-size: 9.5px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .mock-cap {
+    font-size: 11px; color: var(--muted-soft);
+    font-family: ui-monospace, monospace;
+    margin-top: 6px;
+  }
+
+  /* Brief mock simplified */
+  .mock-masthead {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 14px; border-bottom: 1px solid var(--rule);
+    font-size: 9.5px; font-weight: 600; letter-spacing: 0.18em;
+    font-family: ui-monospace, monospace;
+  }
+  .mock-masthead .left { color: var(--ink); display: inline-flex; align-items: center; gap: 8px; }
+  .mock-masthead .left .sq { width: 6px; height: 6px; background: var(--orange); }
+  .mock-masthead .right { color: var(--muted); }
+  .mock-masthead .right .conf {
+    color: var(--green); font-weight: 700; margin-left: 8px;
+  }
+  .mock-bottomline-band {
+    padding: 12px 14px; border-bottom: 1px solid var(--rule);
+  }
+  .mock-bottomline-band .lbl {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--orange);
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .mock-bottomline-band .lbl::after {
+    content: ""; flex: 1; height: 1px; background: var(--rule);
+  }
+  .mock-bottomline-band .text {
+    font-size: 14px; line-height: 1.3; font-weight: 500;
+    color: var(--ink); letter-spacing: -0.015em;
+  }
+  .mock-darkimp {
+    background: var(--ink); color: #ededed;
+    padding: 10px 14px; font-size: 11px; line-height: 1.5;
+    position: relative;
+  }
+  .mock-darkimp::before {
+    content: ""; position: absolute; top: 0; left: 14px;
+    width: 28px; height: 2px; background: var(--orange);
+  }
+  .mock-darkimp .lbl {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.18em;
+    color: var(--orange); text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .mock-foot {
+    background: var(--ink-04); padding: 8px 14px;
+    font-size: 10px; color: var(--muted);
+    font-family: ui-monospace, monospace;
+  }
+
+  /* ── Cost panel ─────────────────────────────────────────── */
+  .cost-panel {
+    background: var(--paper); border: 1px solid var(--border);
+    padding: 18px 22px;
+  }
+  .cost-row {
+    display: grid; grid-template-columns: 200px 1fr 100px;
+    gap: 12px; padding: 8px 0;
+    border-top: 1px solid var(--rule);
+    align-items: center; font-size: 13px;
+  }
+  .cost-row:first-of-type { border-top: none; }
+  .cost-row .name { color: var(--ink); }
+  .cost-bar {
+    position: relative; height: 8px;
+    background: var(--ink-04);
+    overflow: hidden;
+  }
+  .cost-bar .fill { height: 100%; background: var(--orange); }
+  .cost-bar .fill.green { background: var(--green); }
+  .cost-num {
+    text-align: right; font-family: ui-monospace, monospace;
+    font-size: 12px; color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ── Footer ─────────────────────────────────────────────── */
+  footer {
+    margin-top: 64px; padding-top: 18px;
+    border-top: 0.5px solid var(--ink);
+    font-size: 11px; color: var(--muted);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+
+  /* Responsive */
+  @media (max-width: 760px) {
+    .wrap { padding: 28px 16px 56px; }
+    .pair, .cards-grid { grid-template-columns: 1fr; }
+    .cost-row { grid-template-columns: 160px 1fr 80px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ════════ MASTHEAD ════════ -->
+  <div class="mast">
+    <div class="brand">
+      <span class="sq"></span>
+      DESIGN NOTE
+      <span style="color: var(--muted-soft); font-weight: 400; letter-spacing: 0.1em;">№ 001</span>
+    </div>
+    <div class="dateline">SCAPIA MARKET INTELLIGENCE · QUERY ROUTER</div>
+  </div>
+
+  <h1>Query Intent Router</h1>
+  <p class="lede">
+    The query engine used to force <strong>every input</strong> through the Brief format —
+    even <code>"hi"</code>. This redesign classifies intent first and dispatches to the
+    right response shape: <strong>5 intents, 3 card formats, 0 wasted LLM calls on greetings</strong>.
+  </p>
+
+  <!-- ════════ THE PROBLEM ════════ -->
+  <h2>The problem</h2>
+
+  <div class="pair">
+    <div class="pair-card before">
+      <div class="kicker">▼ BEFORE</div>
+      <p><strong>One template for everything.</strong> "hi" → full Intelligence Brief #4329 with Confidence chip, Blind Spot, and a Sonnet call burning ~15s.</p>
+      <p>Vague follow-ups like "tell me more" started from scratch instead of building on the prior turn.</p>
+    </div>
+    <div class="pair-card after">
+      <div class="kicker">▲ AFTER</div>
+      <p><strong>Intent-routed responses.</strong> "hi" → friendly NoteCard in 10ms, no LLM. "tell me more" → ElaborationCard that anchors on the prior turn.</p>
+      <p>Substantive questions still get the full Brief. Out-of-scope inputs get a polite redirect.</p>
+    </div>
+  </div>
+
+  <!-- ════════ WHERE IT FITS ════════ -->
+  <h2>Where it fits in the system</h2>
+  <p>The intent router is a new <strong>sub-layer inside the read surface</strong> —
+    it sits between request reception and response generation in <code>/api/query</code>.
+    The wiki layer and raw sources layer are <strong>unchanged</strong>. Greetings and
+    out-of-scope queries never reach the wiki context loader at all.</p>
+
+  <div class="tree-wrap">
+    <svg class="tree" viewBox="0 0 980 580" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+        </marker>
+      </defs>
+
+      <!-- ── LAYER 3 — Intelligence (read) ────────────────────────────── -->
+      <rect x="20" y="20" width="940" height="270" fill="#fff" stroke="#ce3e00" stroke-width="1" stroke-dasharray="2,3"/>
+      <text x="36" y="42" font-size="10" font-weight="700" letter-spacing="2" fill="#ce3e00">LAYER 3 — INTELLIGENCE (READ SURFACE)</text>
+      <text x="36" y="58" font-size="11" fill="#888">leader-facing — query in, structured response out</text>
+
+      <!-- Leader entry -->
+      <rect x="60" y="78" width="200" height="42" fill="#fff" stroke="#111" stroke-width="0.6"/>
+      <text x="160" y="96" text-anchor="middle" font-size="11" fill="#111">Leader</text>
+      <text x="160" y="111" text-anchor="middle" font-size="10" fill="#888" font-family="ui-monospace,monospace">POST /api/query</text>
+
+      <line x1="260" y1="99" x2="320" y2="99" stroke="#888" stroke-width="0.8" marker-end="url(#arr2)"/>
+
+      <!-- ★ Intent router (highlighted) -->
+      <rect x="320" y="74" width="360" height="50" fill="#fff3ec" stroke="#ce3e00" stroke-width="1.8"/>
+      <text x="500" y="92" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="2" fill="#ce3e00">★ INTENT ROUTER · NEW</text>
+      <text x="500" y="110" text-anchor="middle" font-size="10.5" fill="#111">regex fast-path → Haiku classifier → dispatch</text>
+
+      <line x1="680" y1="99" x2="740" y2="99" stroke="#888" stroke-width="0.8" marker-end="url(#arr2)"/>
+
+      <!-- Response generator -->
+      <rect x="740" y="74" width="200" height="50" fill="#fff" stroke="#111" stroke-width="0.6"/>
+      <text x="840" y="92" text-anchor="middle" font-size="11" fill="#111">Response generator</text>
+      <text x="840" y="108" text-anchor="middle" font-size="9.5" fill="#888" font-family="ui-monospace,monospace">canned · elab · brief</text>
+
+      <!-- Five intent destinations under router -->
+      <text x="60" y="150" font-size="9.5" font-weight="700" letter-spacing="2" fill="#888">5 INTENTS</text>
+      <line x1="60" y1="156" x2="940" y2="156" stroke="#eee" stroke-width="0.5"/>
+
+      <!-- Intent pills row -->
+      <g font-size="10.5" font-family="ui-monospace,monospace">
+        <rect x="60"  y="172" width="160" height="26" fill="#fff" stroke="#111" stroke-width="0.5"/>
+        <text x="140" y="189" text-anchor="middle" fill="#111">greeting</text>
+        <text x="140" y="218" text-anchor="middle" font-size="9.5" fill="#22a06b">→ NoteCard · 0ms · $0</text>
+
+        <rect x="240" y="172" width="160" height="26" fill="#fff" stroke="#111" stroke-width="0.5"/>
+        <text x="320" y="189" text-anchor="middle" fill="#111">meta</text>
+        <text x="320" y="218" text-anchor="middle" font-size="9.5" fill="#22a06b">→ NoteCard · 0ms · $0</text>
+
+        <rect x="420" y="172" width="160" height="26" fill="#fff" stroke="#111" stroke-width="0.5"/>
+        <text x="500" y="189" text-anchor="middle" fill="#111">out_of_scope</text>
+        <text x="500" y="218" text-anchor="middle" font-size="9.5" fill="#ce3e00">→ NoteCard · Haiku ~1s</text>
+
+        <rect x="600" y="172" width="160" height="26" fill="#fff" stroke="#111" stroke-width="0.5"/>
+        <text x="680" y="189" text-anchor="middle" fill="#111">clarification</text>
+        <text x="680" y="218" text-anchor="middle" font-size="9.5" fill="#ce3e00">→ Elaboration · Sonnet</text>
+
+        <rect x="780" y="172" width="160" height="26" fill="#fff" stroke="#111" stroke-width="0.5"/>
+        <text x="860" y="189" text-anchor="middle" fill="#111">brief_query</text>
+        <text x="860" y="218" text-anchor="middle" font-size="9.5" fill="#ce3e00">→ Brief · Sonnet</text>
+      </g>
+
+      <!-- "reads wiki" arrow from response generator down -->
+      <line x1="840" y1="232" x2="840" y2="248" stroke="#aaa" stroke-width="0.8"/>
+      <line x1="840" y1="248" x2="680" y2="248" stroke="#aaa" stroke-width="0.8"/>
+      <line x1="680" y1="248" x2="680" y2="270" stroke="#aaa" stroke-width="0.8" stroke-dasharray="2,3"/>
+
+      <text x="540" y="263" text-anchor="middle" font-size="9.5" fill="#888" font-style="italic">brief and elaboration paths read wiki for context (read-only)</text>
+
+      <!-- ── LAYER 2 — Wiki ───────────────────────────────────────────── -->
+      <rect x="20" y="320" width="940" height="100" fill="#fff" stroke="#111" stroke-width="0.6"/>
+      <text x="36" y="342" font-size="10" font-weight="700" letter-spacing="2" fill="#111">LAYER 2 — WIKI · LLM-MAINTAINED</text>
+      <text x="36" y="358" font-size="11" fill="#888">structured pages written by Claude · the single source of truth</text>
+
+      <g font-size="10.5" font-family="ui-monospace,monospace" fill="#111">
+        <rect x="50"  y="376" width="140" height="26" fill="#f5f6f8" stroke="#e0e0e0" stroke-width="0.5"/>
+        <text x="120" y="394" text-anchor="middle">entities/</text>
+
+        <rect x="200" y="376" width="140" height="26" fill="#f5f6f8" stroke="#e0e0e0" stroke-width="0.5"/>
+        <text x="270" y="394" text-anchor="middle">regulatory/</text>
+
+        <rect x="350" y="376" width="140" height="26" fill="#f5f6f8" stroke="#e0e0e0" stroke-width="0.5"/>
+        <text x="420" y="394" text-anchor="middle">events/</text>
+
+        <rect x="500" y="376" width="140" height="26" fill="#f5f6f8" stroke="#e0e0e0" stroke-width="0.5"/>
+        <text x="570" y="394" text-anchor="middle">partners/</text>
+
+        <rect x="650" y="376" width="140" height="26" fill="#f5f6f8" stroke="#e0e0e0" stroke-width="0.5"/>
+        <text x="720" y="394" text-anchor="middle">market-signals/</text>
+
+        <rect x="800" y="376" width="140" height="26" fill="#f5f6f8" stroke="#e0e0e0" stroke-width="0.5"/>
+        <text x="870" y="394" text-anchor="middle">sources/</text>
+      </g>
+
+      <!-- "written by ingest workflow" arrow up from Raw to Wiki -->
+      <line x1="490" y1="490" x2="490" y2="430" stroke="#888" stroke-width="0.8" marker-end="url(#arr2)"/>
+      <text x="500" y="465" font-size="9.5" fill="#888" font-style="italic">written by ingest workflow (unchanged)</text>
+
+      <!-- ── LAYER 1 — Raw sources ────────────────────────────────────── -->
+      <rect x="20" y="500" width="940" height="62" fill="#fff" stroke="#111" stroke-width="0.6"/>
+      <text x="36" y="520" font-size="10" font-weight="700" letter-spacing="2" fill="#111">LAYER 1 — RAW SOURCES · IMMUTABLE</text>
+      <text x="36" y="536" font-size="11" fill="#888">audit trail · never modified · raw markdown files in raw/&lt;type&gt;/</text>
+      <text x="36" y="552" font-size="10" font-family="ui-monospace,monospace" fill="#aaa">raw/competitive  ·  raw/regulatory  ·  raw/market  ·  raw/ambiguous</text>
+    </svg>
+  </div>
+
+  <p style="font-size: 12.5px; color: var(--muted); margin-top: 12px;">
+    <strong style="color: var(--orange);">★ marks the new piece.</strong>
+    Layer 2 (wiki) and Layer 1 (raw) are untouched. The intent router only
+    decides which response generator to invoke — wiki schema, citation discipline,
+    and the ingest workflow all behave identically to before.
+  </p>
+
+  <!-- ════════ THE ROUTING TREE ════════ -->
+  <h2>How the router decides</h2>
+  <div class="tree-wrap">
+    <svg class="tree" viewBox="0 0 980 480" xmlns="http://www.w3.org/2000/svg">
+      <!-- styles inside SVG -->
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+        </marker>
+      </defs>
+
+      <!-- root: user query -->
+      <rect x="380" y="10" width="220" height="44" fill="#fff" stroke="#111" stroke-width="0.7"/>
+      <text x="490" y="32" text-anchor="middle" font-size="12.5" font-weight="600" fill="#111">user submits query</text>
+      <text x="490" y="46" text-anchor="middle" font-size="10" fill="#888" font-family="ui-monospace,monospace">POST /api/query</text>
+
+      <!-- arrow down -->
+      <line x1="490" y1="54" x2="490" y2="76" stroke="#888" stroke-width="0.8" marker-end="url(#arr)"/>
+
+      <!-- Stage 1: regex -->
+      <rect x="320" y="78" width="340" height="50" fill="#fff3ec" stroke="#ce3e00" stroke-width="0.8"/>
+      <text x="490" y="98" text-anchor="middle" font-size="10" font-weight="700" fill="#ce3e00" letter-spacing="1.6">STAGE 1 — REGEX FAST-PATH (0ms, $0)</text>
+      <text x="490" y="116" text-anchor="middle" font-size="11" fill="#111">matches: "hi" · "hello" · "thanks" · "what can you do"</text>
+
+      <!-- branches from regex -->
+      <line x1="380" y1="128" x2="180" y2="170" stroke="#888" stroke-width="0.8" marker-end="url(#arr)"/>
+      <text x="270" y="148" font-size="10" fill="#888" font-style="italic">match</text>
+      <line x1="600" y1="128" x2="800" y2="170" stroke="#888" stroke-width="0.8" marker-end="url(#arr)"/>
+      <text x="700" y="148" font-size="10" fill="#888" font-style="italic">no match</text>
+
+      <!-- Canned response box (left) -->
+      <rect x="40" y="170" width="280" height="50" fill="#fff" stroke="#22a06b" stroke-width="0.8"/>
+      <text x="180" y="190" text-anchor="middle" font-size="10" font-weight="700" fill="#22a06b" letter-spacing="1.6">CANNED RESPONSE</text>
+      <text x="180" y="208" text-anchor="middle" font-size="11" fill="#111">return format: "note" (instant)</text>
+
+      <!-- Stage 2: Haiku classifier -->
+      <rect x="660" y="170" width="280" height="50" fill="#fff3ec" stroke="#ce3e00" stroke-width="0.8"/>
+      <text x="800" y="190" text-anchor="middle" font-size="10" font-weight="700" fill="#ce3e00" letter-spacing="1.6">STAGE 2 — HAIKU CLASSIFIER</text>
+      <text x="800" y="208" text-anchor="middle" font-size="11" fill="#111">~1s · classify into 1 of 5 intents</text>
+
+      <!-- arrows fanning out from Haiku to 4 intent boxes below -->
+      <line x1="710" y1="220" x2="120" y2="290" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+      <line x1="760" y1="220" x2="380" y2="290" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+      <line x1="840" y1="220" x2="620" y2="290" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+      <line x1="880" y1="220" x2="860" y2="290" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+
+      <!-- 4 intent destination boxes -->
+      <!-- out_of_scope -->
+      <rect x="20" y="294" width="200" height="64" fill="#fff" stroke="#111" stroke-width="0.6"/>
+      <text x="120" y="312" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="1.2" fill="#ce3e00">OUT_OF_SCOPE</text>
+      <text x="120" y="330" text-anchor="middle" font-size="10.5" fill="#111">canned redirect</text>
+      <text x="120" y="346" text-anchor="middle" font-size="9.5" fill="#888" font-family="ui-monospace,monospace">format: "note"</text>
+
+      <!-- meta (covered by regex usually) -->
+      <rect x="280" y="294" width="200" height="64" fill="#fff" stroke="#111" stroke-width="0.6"/>
+      <text x="380" y="312" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="1.2" fill="#ce3e00">META</text>
+      <text x="380" y="330" text-anchor="middle" font-size="10.5" fill="#111">canned capabilities</text>
+      <text x="380" y="346" text-anchor="middle" font-size="9.5" fill="#888" font-family="ui-monospace,monospace">format: "note"</text>
+
+      <!-- clarification -->
+      <rect x="520" y="294" width="200" height="64" fill="#fff" stroke="#111" stroke-width="0.6"/>
+      <text x="620" y="312" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="1.2" fill="#ce3e00">CLARIFICATION</text>
+      <text x="620" y="330" text-anchor="middle" font-size="10.5" fill="#111">Sonnet · elaboration prompt</text>
+      <text x="620" y="346" text-anchor="middle" font-size="9.5" fill="#888" font-family="ui-monospace,monospace">format: "elaboration"</text>
+
+      <!-- brief_query -->
+      <rect x="760" y="294" width="200" height="64" fill="#fff" stroke="#111" stroke-width="0.6"/>
+      <text x="860" y="312" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="1.2" fill="#ce3e00">BRIEF_QUERY</text>
+      <text x="860" y="330" text-anchor="middle" font-size="10.5" fill="#111">Sonnet · QUERY_PROMPT</text>
+      <text x="860" y="346" text-anchor="middle" font-size="9.5" fill="#888" font-family="ui-monospace,monospace">format: "brief"</text>
+
+      <!-- bottom: AnswerCard dispatch -->
+      <line x1="120" y1="358" x2="490" y2="398" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+      <line x1="380" y1="358" x2="490" y2="398" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+      <line x1="620" y1="358" x2="490" y2="398" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+      <line x1="860" y1="358" x2="490" y2="398" stroke="#888" stroke-width="0.7" marker-end="url(#arr)"/>
+
+      <rect x="320" y="400" width="340" height="60" fill="#fff" stroke="#111" stroke-width="0.7"/>
+      <text x="490" y="420" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="1.4" fill="#111">FRONTEND: AnswerCard branches on `format`</text>
+      <text x="490" y="438" text-anchor="middle" font-size="10.5" fill="#888">note → NoteCard · elaboration → ElaborationCard · brief → IntelligenceBrief</text>
+      <text x="490" y="453" text-anchor="middle" font-size="10" fill="#aaa" font-family="ui-monospace,monospace">each shape has its own chrome</text>
+    </svg>
+  </div>
+
+  <!-- ════════ THE 5 INTENTS ════════ -->
+  <h2>The 5 intents</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 16%">Intent</th>
+        <th style="width: 28%">Trigger</th>
+        <th style="width: 22%">Card</th>
+        <th>Cost</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="pill">greeting</span></td>
+        <td><code>hi</code> · <code>hello</code> · <code>thanks</code> · <code>gm</code></td>
+        <td><span class="pill">NoteCard</span> friendly + 4 starters</td>
+        <td><span class="pill green">0 LLM</span> · regex match</td>
+      </tr>
+      <tr>
+        <td><span class="pill">meta</span></td>
+        <td><code>what can you do</code> · <code>help</code></td>
+        <td><span class="pill">NoteCard</span> capabilities note</td>
+        <td><span class="pill green">0 LLM</span> · regex match</td>
+      </tr>
+      <tr>
+        <td><span class="pill">out_of_scope</span></td>
+        <td>Off-topic — weather, jokes, coding</td>
+        <td><span class="pill">NoteCard</span> orange stripe · redirect</td>
+        <td><span class="pill orange">Haiku</span> · ~1s</td>
+      </tr>
+      <tr>
+        <td><span class="pill">clarification</span></td>
+        <td>Short query + thread history + cue (<code>tell more</code>, <code>expand</code>)</td>
+        <td><span class="pill">ElaborationCard</span> · prose + citations</td>
+        <td><span class="pill orange">Sonnet</span> · ~5–8s (smaller prompt)</td>
+      </tr>
+      <tr>
+        <td><span class="pill">brief_query</span></td>
+        <td>Substantive new question (default)</td>
+        <td><span class="pill">IntelligenceBrief</span> · masthead + signals + impl</td>
+        <td><span class="pill orange">Haiku + Sonnet</span> · 15–30s</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ════════ THE 3 CARD SHAPES ════════ -->
+  <h2>The 3 card shapes</h2>
+
+  <div class="cards-grid">
+
+    <!-- NoteCard mock -->
+    <div>
+      <div class="mock-label">NoteCard · greetings, meta, redirects</div>
+      <div class="mock">
+        <div class="mock-stripe"></div>
+        <div class="mock-body">
+          <p><strong>Hi</strong> — I'm the Scapia market intelligence agent. Ask me about competitors, regulators, market signals, or strategic positioning.</p>
+          <p><strong>Try one of these to get started:</strong></p>
+          <ul>
+            <li>How should Scapia respond to CRED?</li>
+            <li>Priority acquisition move vs Atlas refugees?</li>
+            <li>RBI compliance gaps right now?</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mock-cap">~720px max · thin black stripe · friendly tone · no Brief chrome</div>
+    </div>
+
+    <!-- ElaborationCard mock -->
+    <div>
+      <div class="mock-label">ElaborationCard · follow-up clarifications</div>
+      <div class="mock">
+        <div class="mock-body" style="padding: 12px 18px 6px;">
+          <div class="eyebrow">Elaboration</div>
+          <p>On the lounge moat point — CRED Pass Lite at ₹499/yr now exposes the same Priority Pass network without requiring a Scapia card.</p>
+          <p>Scapia's defensible position shifts from "free lounge" to "lounge plus coin-on-flights redemption" — the rewards layer is the moat, not access alone.</p>
+        </div>
+      </div>
+      <div class="mock-cap">orange ELABORATION eyebrow · 2–4 paragraphs · inline wikilinks · no Confidence/Blind Spot</div>
+    </div>
+
+    <!-- Brief mock (simplified) -->
+    <div>
+      <div class="mock-label">IntelligenceBrief · substantive queries</div>
+      <div class="mock">
+        <div class="mock-masthead">
+          <span class="left"><span class="sq"></span>INTELLIGENCE BRIEF · № 4321</span>
+          <span class="right">AS OF 14/06/26 <span class="conf">● HIGH</span></span>
+        </div>
+        <div class="mock-bottomline-band">
+          <div class="lbl">Bottom Line</div>
+          <div class="text">Launch Reddit-first acquisition push within 14 days before HDFC's pre-approval campaign closes the funnel.</div>
+        </div>
+        <div class="mock-darkimp">
+          <div class="lbl">Scapia Implication</div>
+          <span style="color:#ce3e00;">→</span> Ship a 14-day r/CreditCardsIndia campaign — owner: growth, target: 300 attributed signups
+        </div>
+        <div class="mock-foot">Confidence: High — wiki has 3 corroborating signals · Perspectives: Fintech · Regulatory</div>
+      </div>
+      <div class="mock-cap">full IntelligenceBrief — masthead, Bottom Line, signals, stat strips, dark Implication, footer</div>
+    </div>
+
+    <!-- ElaborationCard variation — could be NoteCard with orange tone -->
+    <div>
+      <div class="mock-label">NoteCard · out-of-scope redirect</div>
+      <div class="mock">
+        <div class="mock-stripe orange"></div>
+        <div class="mock-body">
+          <p>That's outside what I'm scoped to know. I'm focused on Scapia's market intelligence — competitors, regulators, market signals, partners.</p>
+          <p>Try asking about one of those, or browse the <strong>Vault</strong> to see what the wiki currently knows.</p>
+        </div>
+      </div>
+      <div class="mock-cap">same NoteCard shape · orange stripe signals redirect</div>
+    </div>
+
+  </div>
+
+  <!-- ════════ COST / LATENCY ════════ -->
+  <h2>Cost &amp; latency impact</h2>
+
+  <div class="cost-panel">
+    <div class="cost-row">
+      <span class="name">"hi"</span>
+      <div class="cost-bar"><div class="fill green" style="width: 1%;"></div></div>
+      <span class="cost-num">0.01s · $0</span>
+    </div>
+    <div class="cost-row">
+      <span class="name">"thanks"</span>
+      <div class="cost-bar"><div class="fill green" style="width: 1%;"></div></div>
+      <span class="cost-num">0.01s · $0</span>
+    </div>
+    <div class="cost-row">
+      <span class="name">"what can you do"</span>
+      <div class="cost-bar"><div class="fill green" style="width: 1%;"></div></div>
+      <span class="cost-num">0.01s · $0</span>
+    </div>
+    <div class="cost-row">
+      <span class="name">out_of_scope</span>
+      <div class="cost-bar"><div class="fill" style="width: 4%;"></div></div>
+      <span class="cost-num">~1s · ~$0.001</span>
+    </div>
+    <div class="cost-row">
+      <span class="name">clarification (cue match)</span>
+      <div class="cost-bar"><div class="fill" style="width: 22%;"></div></div>
+      <span class="cost-num">~5s · ~$0.01</span>
+    </div>
+    <div class="cost-row">
+      <span class="name">brief_query (full)</span>
+      <div class="cost-bar"><div class="fill" style="width: 100%;"></div></div>
+      <span class="cost-num">~25s · ~$0.04</span>
+    </div>
+    <p style="margin: 12px 0 0; font-size: 12px; color: var(--muted);">
+      Bars relative to a typical brief_query baseline (~25s). Cost figures assume Sonnet 4.6 + Haiku 4.5 via the Odyssey gateway.
+    </p>
+  </div>
+
+  <!-- ════════ DEGRADATION ════════ -->
+  <h2>Graceful degradation</h2>
+  <p>
+    If the Haiku classifier times out (Odyssey slow, VPN flaky), we fall through to
+    <code>brief_query</code> — the original behavior. The user still gets an answer; only the
+    cosmetic intent label is lost. <strong>Greetings keep working at full speed</strong> because they
+    never touch the LLM.
+  </p>
+
+  <!-- ════════ IMPLEMENTATION POINTERS ════════ -->
+  <h2>Where the code lives</h2>
+  <table>
+    <thead>
+      <tr><th style="width: 38%">File</th><th>What changed</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>server.py</code> · <code>classify_intent()</code></td>
+        <td>Two-pass classifier: regex → Haiku LLM fallback. Returns 1 of 5 intents.</td>
+      </tr>
+      <tr>
+        <td><code>server.py</code> · <code>_handle_query()</code></td>
+        <td>Dispatches on intent. Returns <code>{answer, format}</code> where format is <code>"brief"</code> / <code>"elaboration"</code> / <code>"note"</code>.</td>
+      </tr>
+      <tr>
+        <td><code>server.py</code> · prompts</td>
+        <td><code>INTENT_CLASSIFIER_PROMPT</code> for Haiku · <code>ELABORATION_PROMPT</code> for follow-ups · <code>QUERY_PROMPT</code> unchanged.</td>
+      </tr>
+      <tr>
+        <td><code>AnswerCard.jsx</code></td>
+        <td>New <code>NoteCard</code> + <code>ElaborationCard</code> components. Main export branches on the <code>format</code> prop.</td>
+      </tr>
+      <tr>
+        <td><code>IntelligencePage.jsx</code></td>
+        <td>Stores <code>format</code> per turn in localStorage. AnswerView conditionally wraps brief responses in the heavy card chrome.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <footer>
+    <div>Scapia Market Intelligence · Query Router Design</div>
+    <div>v1 · Implemented June 2026</div>
+  </footer>
+
+</div>
+</body>
+</html>

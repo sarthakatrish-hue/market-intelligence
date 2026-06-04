@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scapia Market Intelligence — Deployment Specifications</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #6b6b6b;
+    --line: #e5e5e5;
+    --line-strong: #1a1a1a;
+    --bg: #fafaf8;
+    --card: #ffffff;
+    --orange: #ff6a1f;
+    --orange-tint: #fff4ec;
+    --green: #2d7a4f;
+    --green-tint: #eef7f1;
+    --red: #c4422a;
+    --red-tint: #fdf0ee;
+    --blue: #1e5fa8;
+    --blue-tint: #eaf2fa;
+    --code-bg: #f4f1ec;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 56px 56px 100px; }
+
+  header.masthead {
+    border-bottom: 2px solid var(--line-strong);
+    padding-bottom: 24px;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+  }
+  .masthead-left .kicker {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--orange); font-weight: 700; margin-bottom: 8px;
+  }
+  .masthead-left h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+  .masthead-right { font-size: 12px; color: var(--muted); text-align: right; letter-spacing: 0.04em; line-height: 1.6; }
+
+  .lede {
+    font-size: 16px; line-height: 1.6; color: #2a2a2a;
+    margin-bottom: 32px; padding: 20px 24px;
+    border-left: 3px solid var(--orange); background: var(--orange-tint);
+  }
+
+  .audience-key {
+    background: var(--card); border: 1px solid var(--line);
+    border-left: 3px solid var(--blue);
+    padding: 14px 22px; margin-bottom: 48px;
+    font-size: 13px; color: #333;
+    display: flex; gap: 22px; flex-wrap: wrap; align-items: center;
+  }
+  .audience-key strong { color: var(--blue); margin-right: 6px; }
+  .audience-key .tag-sample { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* audience tags */
+  .tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+    font-size: 10px; letter-spacing: 0.1em; font-weight: 700;
+    padding: 2px 8px; border-radius: 2px; vertical-align: middle;
+    margin-left: 10px;
+  }
+  .tag-all  { background: #1a1a1a; color: #fff; }
+  .tag-eng  { background: var(--blue-tint); color: var(--blue); border: 1px solid var(--blue); }
+  .tag-ops  { background: var(--orange-tint); color: var(--orange); border: 1px solid var(--orange); }
+  .tag-lead { background: var(--green-tint); color: var(--green); border: 1px solid var(--green); }
+
+  h2 {
+    font-size: 24px; font-weight: 700; margin: 72px 0 18px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--line-strong);
+    letter-spacing: -0.01em;
+  }
+  h2 .num {
+    color: var(--orange); font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px; margin-right: 14px; font-weight: 600;
+  }
+  h3 {
+    font-size: 14px; font-weight: 700; margin: 28px 0 10px;
+    text-transform: uppercase; letter-spacing: 0.08em; color: #333;
+  }
+
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 8px 0 18px 22px; }
+  li { margin-bottom: 6px; }
+  strong { font-weight: 700; color: var(--ink); }
+  code {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    background: var(--code-bg); padding: 1px 6px; border-radius: 2px; color: #2a2a2a;
+  }
+
+  .diagram {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 6px; padding: 28px; margin: 20px 0 28px;
+  }
+  .diagram-title {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); font-weight: 700; margin-bottom: 18px;
+  }
+  .diagram svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+
+  table {
+    width: 100%; border-collapse: collapse;
+    margin: 12px 0 24px; background: var(--card); border: 1px solid var(--line);
+  }
+  th, td {
+    text-align: left; padding: 12px 16px;
+    border-bottom: 1px solid var(--line); font-size: 14px; vertical-align: top;
+  }
+  th {
+    background: var(--code-bg); font-weight: 700; font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: #333;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .toc {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 4px; padding: 22px 26px; margin-bottom: 48px;
+  }
+  .toc-title {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); font-weight: 700; margin-bottom: 14px;
+  }
+  .toc-cluster {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--orange); font-weight: 700;
+    margin: 14px 0 6px;
+  }
+  .toc-cluster:first-of-type { margin-top: 0; }
+  .toc ol { margin: 0 0 0 20px; }
+  .toc li { margin-bottom: 5px; font-size: 13.5px; }
+  .toc a { color: var(--ink); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+  .toc a:hover { border-bottom-color: var(--orange); color: var(--orange); }
+  .toc .tag { margin-left: 6px; }
+
+  .split-cards {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    margin: 18px 0 24px;
+  }
+  .split-cards > div {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 4px; padding: 22px 24px;
+  }
+  .split-cards .now { border-top: 4px solid var(--red); }
+  .split-cards .next { border-top: 4px solid var(--green); }
+  .split-cards .head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  }
+  .split-cards .label-big { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .split-cards .label-tag {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+  }
+  .split-cards .now .label-tag { color: var(--red); }
+  .split-cards .next .label-tag { color: var(--green); }
+  .split-cards ul { margin-left: 18px; }
+  .split-cards li { font-size: 13.5px; margin-bottom: 7px; }
+  .split-cards li code { font-size: 12px; }
+
+  .callout {
+    border-left: 4px solid var(--orange); background: var(--orange-tint);
+    padding: 14px 20px; margin: 16px 0 24px; font-size: 14px;
+    border-radius: 0 4px 4px 0;
+  }
+  .callout strong { color: #b34a17; }
+
+  /* host one-liner grid */
+  .hosts {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    margin: 20px 0 28px;
+  }
+  .host {
+    background: var(--card); border: 1px solid var(--line);
+    border-left: 4px solid var(--orange);
+    border-radius: 3px; padding: 14px 18px;
+  }
+  .host .name {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    letter-spacing: 0.12em; font-weight: 700; margin-bottom: 4px;
+  }
+  .host .desc { font-size: 13px; color: #333; }
+  .host.vercel  { border-left-color: var(--blue); }
+  .host.vercel .name  { color: var(--blue); }
+  .host.render  { border-left-color: var(--green); }
+  .host.render .name  { color: var(--green); }
+  .host.supabase { border-left-color: var(--green); }
+  .host.supabase .name { color: var(--green); }
+  .host.odyssey { border-left-color: #1a1a1a; }
+  .host.odyssey .name { color: #1a1a1a; }
+  .host.resend  { border-left-color: var(--orange); }
+  .host.resend .name  { color: var(--orange); }
+  .host.github  { border-left-color: #6b6b6b; }
+  .host.github .name  { color: #6b6b6b; }
+
+  /* change arrows */
+  .change-list {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 4px; padding: 20px 24px; margin: 12px 0 24px;
+  }
+  .change-list .row {
+    display: grid; grid-template-columns: 160px 1fr 30px 1fr;
+    gap: 16px; align-items: center;
+    padding: 9px 0; border-bottom: 1px dashed var(--line);
+    font-size: 13.5px;
+  }
+  .change-list .row:last-child { border-bottom: none; }
+  .change-list .aspect { font-weight: 700; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #333; }
+  .change-list .from { color: var(--red); }
+  .change-list .arrow { text-align: center; color: var(--orange); font-weight: 700; }
+  .change-list .to   { color: var(--green); font-weight: 600; }
+
+  footer.foot {
+    margin-top: 80px; padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--muted);
+    text-align: center; letter-spacing: 0.04em;
+  }
+
+  .stub {
+    background: #fafaf8; border: 1px dashed #ccc;
+    border-radius: 4px; padding: 20px 24px; margin: 12px 0 28px;
+    font-size: 13px; color: #888; font-style: italic;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="masthead-left">
+    <div class="kicker">Scapia Market Intelligence · Production</div>
+    <h1>Deployment Specifications</h1>
+  </div>
+  <div class="masthead-right">
+    PRODUCTION DEPLOYMENT · v1<br>
+    VERCEL · RENDER · SUPABASE · ODYSSEY<br>
+    2026
+  </div>
+</header>
+
+<div class="toc">
+  <div class="toc-title">Contents</div>
+
+  <div class="toc-cluster">A · The Big Picture</div>
+  <ol>
+    <li><a href="#sec1">Overview &amp; topology</a></li>
+    <li><a href="#sec2">What we're deploying — current vs target</a></li>
+  </ol>
+
+  <div class="toc-cluster">B · The Hosts</div>
+  <ol start="3">
+    <li><a href="#sec3">Frontend — Vercel</a></li>
+    <li><a href="#sec4">Backend — Render</a></li>
+    <li><a href="#sec5">Database &amp; Storage — Supabase</a></li>
+    <li><a href="#sec6">LLM access — Odyssey</a></li>
+  </ol>
+
+  <div class="toc-cluster">C · The Glue</div>
+  <ol start="7">
+    <li>Auth &amp; roles</li>
+    <li>Background jobs</li>
+    <li><a href="#sec9">Cost caps, rate limits &amp; circuit breakers</a></li>
+    <li>Observability</li>
+  </ol>
+
+  <div class="toc-cluster">D · Execution</div>
+  <ol start="11">
+    <li>Rollout plan</li>
+    <li>Known risks &amp; deferred items</li>
+  </ol>
+</div>
+
+<!-- =================== SEC 1 — OVERVIEW & TOPOLOGY =================== -->
+<h2 id="sec1"><span class="num">01</span>Overview &amp; topology</h2>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram 1 — Full production topology (single source of truth)</div>
+  <svg viewBox="0 0 1300 880" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arT" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><polygon points="0,0 10,5 0,10" fill="#1a1a1a"/></marker>
+      <marker id="arO" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><polygon points="0,0 10,5 0,10" fill="#ff6a1f"/></marker>
+      <marker id="arG" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><polygon points="0,0 10,5 0,10" fill="#2d7a4f"/></marker>
+      <marker id="arM" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><polygon points="0,0 10,5 0,10" fill="#888"/></marker>
+    </defs>
+
+    <!-- USER -->
+    <rect x="490" y="30" width="200" height="80" fill="#fff" stroke="#1a1a1a" stroke-width="2" rx="5"/>
+    <text x="590" y="68" text-anchor="middle" font-family="system-ui" font-size="18" font-weight="700">USER</text>
+    <text x="590" y="92" text-anchor="middle" font-family="system-ui" font-size="13" fill="#666">curator · leader</text>
+
+    <text x="620" y="135" font-family="monospace" font-size="12" fill="#666">browser</text>
+    <line x1="590" y1="110" x2="590" y2="170" stroke="#1a1a1a" stroke-width="1.8" marker-end="url(#arT)"/>
+
+    <!-- VERCEL -->
+    <rect x="100" y="180" width="320" height="150" fill="#fff" stroke="#1e5fa8" stroke-width="2.2" rx="6"/>
+    <rect x="100" y="180" width="320" height="7" fill="#1e5fa8"/>
+    <text x="260" y="222" text-anchor="middle" font-family="system-ui" font-size="22" font-weight="700">VERCEL</text>
+    <text x="260" y="248" text-anchor="middle" font-family="system-ui" font-size="15" fill="#666">React + Vite SPA</text>
+    <text x="260" y="278" text-anchor="middle" font-family="monospace" font-size="13" fill="#666">/   ·   /vault   ·   /intelligence</text>
+    <text x="260" y="300" text-anchor="middle" font-family="monospace" font-size="13" fill="#666">/curator/*  (role-gated)</text>
+
+    <!-- USER → VERCEL curve -->
+    <path d="M 540 110 Q 410 145 320 178" fill="none" stroke="#1a1a1a" stroke-width="1.8" marker-end="url(#arT)"/>
+
+    <!-- VERCEL → RENDER -->
+    <line x1="425" y1="255" x2="535" y2="255" stroke="#ff6a1f" stroke-width="2" marker-end="url(#arO)"/>
+    <text x="480" y="243" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#b34a17">fetch /api/*</text>
+    <text x="480" y="275" text-anchor="middle" font-family="monospace" font-size="12" fill="#666">+ JWT bearer</text>
+
+    <!-- RENDER -->
+    <rect x="540" y="180" width="380" height="380" fill="#fff" stroke="#2d7a4f" stroke-width="2.2" rx="6"/>
+    <rect x="540" y="180" width="380" height="7" fill="#2d7a4f"/>
+    <text x="730" y="222" text-anchor="middle" font-family="system-ui" font-size="22" font-weight="700">RENDER</text>
+    <text x="730" y="248" text-anchor="middle" font-family="system-ui" font-size="15" fill="#666">FastAPI + agent runtime</text>
+
+    <rect x="562" y="270" width="336" height="38" fill="#fafaf8" stroke="#999" stroke-width="1" rx="3"/>
+    <text x="730" y="295" text-anchor="middle" font-family="monospace" font-size="13" fill="#333">routes/  ·  public · leader · curator · internal</text>
+
+    <rect x="562" y="318" width="336" height="38" fill="#fafaf8" stroke="#999" stroke-width="1" rx="3"/>
+    <text x="730" y="343" text-anchor="middle" font-family="monospace" font-size="13" fill="#333">agent loop  ·  Claude Agent SDK</text>
+
+    <rect x="562" y="366" width="336" height="38" fill="#fafaf8" stroke="#999" stroke-width="1" rx="3"/>
+    <text x="730" y="391" text-anchor="middle" font-family="monospace" font-size="13" fill="#333">7 tools  ·  read_raw  write_page  …</text>
+
+    <rect x="562" y="414" width="336" height="38" fill="#fafaf8" stroke="#999" stroke-width="1" rx="3"/>
+    <text x="730" y="439" text-anchor="middle" font-family="monospace" font-size="13" fill="#333">CLAUDE.md  ·  system prompt</text>
+
+    <rect x="562" y="462" width="336" height="38" fill="#fafaf8" stroke="#999" stroke-width="1" rx="3"/>
+    <text x="730" y="487" text-anchor="middle" font-family="monospace" font-size="13" fill="#333">BackgroundTasks  ·  async ingest</text>
+
+    <text x="730" y="535" text-anchor="middle" font-family="monospace" font-size="12" fill="#666" font-style="italic">single container · keepalive every 14m</text>
+
+    <!-- RENDER → SUPABASE -->
+    <line x1="925" y1="270" x2="990" y2="270" stroke="#2d7a4f" stroke-width="2" marker-end="url(#arG)"/>
+    <text x="958" y="260" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#2d7a4f">SQL</text>
+
+    <!-- RENDER → ODYSSEY -->
+    <line x1="925" y1="430" x2="990" y2="430" stroke="#ff6a1f" stroke-width="2" marker-end="url(#arO)"/>
+    <text x="958" y="420" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#b34a17">LLM</text>
+
+    <!-- RENDER → RESEND (L-shape so it attaches to RENDER's right edge) -->
+    <path d="M 920 540 L 955 540 L 955 590 L 988 590" fill="none" stroke="#ff6a1f" stroke-width="2" marker-end="url(#arO)"/>
+    <text x="970" y="568" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#b34a17">SMTP</text>
+
+    <!-- SUPABASE -->
+    <rect x="990" y="200" width="280" height="140" fill="#fff" stroke="#2d7a4f" stroke-width="2" rx="6"/>
+    <rect x="990" y="200" width="280" height="7" fill="#2d7a4f"/>
+    <text x="1130" y="240" text-anchor="middle" font-family="system-ui" font-size="20" font-weight="700">SUPABASE</text>
+    <text x="1130" y="266" text-anchor="middle" font-family="system-ui" font-size="13" fill="#666">Postgres  ·  Storage  ·  Auth</text>
+    <text x="1130" y="294" text-anchor="middle" font-family="monospace" font-size="12" fill="#666">pages · sources · jobs</text>
+    <text x="1130" y="316" text-anchor="middle" font-family="monospace" font-size="12" fill="#666">raw-sources bucket · pg_cron</text>
+
+    <!-- ODYSSEY -->
+    <rect x="990" y="360" width="280" height="140" fill="#1a1a1a" rx="6"/>
+    <rect x="990" y="360" width="280" height="7" fill="#ff6a1f"/>
+    <text x="1130" y="400" text-anchor="middle" font-family="system-ui" font-size="20" font-weight="700" fill="#fff">ODYSSEY</text>
+    <text x="1130" y="426" text-anchor="middle" font-family="system-ui" font-size="13" fill="#ff6a1f">Anthropic-compatible gateway</text>
+    <text x="1130" y="454" text-anchor="middle" font-family="monospace" font-size="12" fill="#aaa">claude-sonnet-4-7</text>
+    <text x="1130" y="478" text-anchor="middle" font-family="system-ui" font-size="12" fill="#aaa" font-style="italic">VPN · Scapia-managed</text>
+
+    <!-- RESEND -->
+    <rect x="990" y="520" width="280" height="140" fill="#fff" stroke="#ff6a1f" stroke-width="2" rx="6"/>
+    <rect x="990" y="520" width="280" height="7" fill="#ff6a1f"/>
+    <text x="1130" y="560" text-anchor="middle" font-family="system-ui" font-size="20" font-weight="700">RESEND</text>
+    <text x="1130" y="586" text-anchor="middle" font-family="system-ui" font-size="13" fill="#666">daily digest  ·  09:00 IST</text>
+    <text x="1130" y="614" text-anchor="middle" font-family="monospace" font-size="12" fill="#666">subscriber inboxes</text>
+    <text x="1130" y="636" text-anchor="middle" font-family="system-ui" font-size="12" fill="#666" font-style="italic">no per-event push in v1</text>
+
+    <!-- GITHUB -->
+    <rect x="100" y="400" width="320" height="140" fill="#fff" stroke="#1a1a1a" stroke-width="2" rx="6"/>
+    <rect x="100" y="400" width="320" height="7" fill="#666"/>
+    <text x="260" y="442" text-anchor="middle" font-family="system-ui" font-size="20" font-weight="700">GITHUB</text>
+    <text x="260" y="468" text-anchor="middle" font-family="system-ui" font-size="13" fill="#666">source code + nightly snapshots</text>
+    <text x="260" y="496" text-anchor="middle" font-family="monospace" font-size="12" fill="#666">main  ·  snapshots branch</text>
+    <text x="260" y="520" text-anchor="middle" font-family="system-ui" font-size="12" fill="#666" font-style="italic">auto-deploy on push</text>
+
+    <!-- GITHUB → VERCEL (deploy) -->
+    <path d="M 200 400 Q 200 365 200 332" fill="none" stroke="#888" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#arM)"/>
+    <text x="120" y="370" font-family="monospace" font-size="12" fill="#888">deploy</text>
+
+    <!-- GITHUB → RENDER (deploy) -->
+    <path d="M 420 440 Q 480 420 540 380" fill="none" stroke="#888" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#arM)"/>
+    <text x="448" y="408" font-family="monospace" font-size="12" fill="#888">deploy</text>
+
+    <!-- RENDER → GITHUB (snapshot, 3 AM) -->
+    <path d="M 540 530 Q 480 530 420 510" fill="none" stroke="#888" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#arM)"/>
+    <text x="430" y="556" font-family="monospace" font-size="12" fill="#888">03:00 IST  ·  git snapshot</text>
+
+    <!-- Divider before legend -->
+    <line x1="40" y1="680" x2="1270" y2="680" stroke="#e5e5e5" stroke-width="1.5"/>
+
+    <!-- Legend -->
+    <text x="40" y="720" font-family="monospace" font-size="13" font-weight="700" letter-spacing="2" fill="#666">DATA FLOW LEGEND</text>
+
+    <line x1="40"  y1="754" x2="92" y2="754" stroke="#1a1a1a" stroke-width="2" marker-end="url(#arT)"/>
+    <text x="105" y="759" font-family="system-ui" font-size="14" fill="#333">user  ·  browser load</text>
+
+    <line x1="320" y1="754" x2="372" y2="754" stroke="#ff6a1f" stroke-width="2" marker-end="url(#arO)"/>
+    <text x="385" y="759" font-family="system-ui" font-size="14" fill="#333">app  ·  API call / LLM / email</text>
+
+    <line x1="680" y1="754" x2="732" y2="754" stroke="#2d7a4f" stroke-width="2" marker-end="url(#arG)"/>
+    <text x="745" y="759" font-family="system-ui" font-size="14" fill="#333">app  ·  database read/write</text>
+
+    <line x1="990" y1="754" x2="1042" y2="754" stroke="#888" stroke-width="1.8" stroke-dasharray="4,3" marker-end="url(#arM)"/>
+    <text x="1055" y="759" font-family="system-ui" font-size="14" fill="#333">code  ·  deploy / snapshot</text>
+
+    <!-- counts -->
+    <text x="40" y="815" font-family="monospace" font-size="13" font-weight="700" letter-spacing="2" fill="#666">EXTERNAL SERVICES · 6</text>
+    <text x="40" y="845" font-family="system-ui" font-size="14" fill="#333">Vercel  ·  Render  ·  Supabase  ·  Odyssey  ·  Resend  ·  GitHub</text>
+  </svg>
+</div>
+
+<h3>What each host does — one line each</h3>
+
+<div class="hosts">
+  <div class="host vercel">
+    <div class="name">VERCEL</div>
+    <div class="desc">Serves the React + Vite frontend (static files, global CDN).</div>
+  </div>
+  <div class="host render">
+    <div class="name">RENDER</div>
+    <div class="desc">Runs the FastAPI app and the agent loop — the only place our code executes.</div>
+  </div>
+  <div class="host supabase">
+    <div class="name">SUPABASE</div>
+    <div class="desc">Postgres for wiki pages + jobs + logs; Storage bucket for raw files; magic-link auth.</div>
+  </div>
+  <div class="host odyssey">
+    <div class="name">ODYSSEY</div>
+    <div class="desc">Scapia's Anthropic-compatible LLM gateway — every LLM call goes through here.</div>
+  </div>
+  <div class="host resend">
+    <div class="name">RESEND</div>
+    <div class="desc">Sends the daily 09:00 IST digest. No per-event email in v1.</div>
+  </div>
+  <div class="host github">
+    <div class="name">GITHUB</div>
+    <div class="desc">Source of truth for code; receives nightly markdown snapshots for git-level audit.</div>
+  </div>
+</div>
+
+<div class="callout">
+  <strong>Single read of the diagram:</strong> the user hits Vercel, Vercel-loaded JS hits Render, Render talks to Supabase + Odyssey + Resend. GitHub sits to the side — it's the source of code (deploys flow <em>out</em>) and the snapshot archive (flow <em>in</em> from Render at 3 AM).
+</div>
+
+<!-- =================== SEC 2 — CURRENT vs TARGET =================== -->
+<h2 id="sec2"><span class="num">02</span>What we're deploying — current vs target</h2>
+
+<div class="split-cards">
+  <div class="now">
+    <div class="head">
+      <div class="label-big">CURRENT</div>
+      <div class="label-tag">LOCAL DEV · 1 USER</div>
+    </div>
+    <ul>
+      <li>One Python file — <code>server.py</code> · 1,446 lines · single process</li>
+      <li>Filesystem storage — <code>wiki/</code>, <code>raw/</code>, <code>state.json</code></li>
+      <li>No auth — anyone on <code>localhost:5173</code> is the curator</li>
+      <li>Agent = single LLM call returning a JSON spec; Python interprets it</li>
+      <li>Ingest is synchronous — submit blocks for 30–60s</li>
+      <li>No email · no digest · no scheduled jobs</li>
+      <li>Manual <code>python3 server.py</code> + <code>npm run dev</code> in two terminals</li>
+      <li>Reachable only from the maintainer's laptop · requires VPN for Odyssey</li>
+    </ul>
+  </div>
+  <div class="next">
+    <div class="head">
+      <div class="label-big">TARGET</div>
+      <div class="label-tag">PRODUCTION · 2–5 USERS</div>
+    </div>
+    <ul>
+      <li>FastAPI app split into modules — <code>routes/</code>, <code>agent/</code>, <code>jobs/</code></li>
+      <li>Supabase — Postgres + Storage bucket + Auth (magic-link)</li>
+      <li>Two roles — <code>leader</code> (read-only) + <code>curator</code> (full access)</li>
+      <li>Agent = real loop via Claude Agent SDK · 7 tools · 5–15 iterations</li>
+      <li>Ingest is async — submit acks instantly, job runs in <code>BackgroundTasks</code></li>
+      <li>Daily digest via Resend at 09:00 IST · nightly git snapshot at 03:00 IST</li>
+      <li>Auto-deploy on <code>git push</code> · Vercel + Render both</li>
+      <li>Public HTTPS · always-on (14-min keepalive) · leaders + curator</li>
+    </ul>
+  </div>
+</div>
+
+<h3>The explicit list of what changes</h3>
+
+<div class="change-list">
+  <div class="row">
+    <div class="aspect">Backend shape</div>
+    <div class="from">single <code>server.py</code></div>
+    <div class="arrow">→</div>
+    <div class="to">FastAPI · <code>routes/ agent/ jobs/</code></div>
+  </div>
+  <div class="row">
+    <div class="aspect">Storage</div>
+    <div class="from">filesystem · <code>wiki/</code> + <code>raw/</code></div>
+    <div class="arrow">→</div>
+    <div class="to">Supabase Postgres + Storage bucket</div>
+  </div>
+  <div class="row">
+    <div class="aspect">Agent</div>
+    <div class="from">1 LLM call returning JSON</div>
+    <div class="arrow">→</div>
+    <div class="to">Agent SDK loop · 7 tools · 5–15 iter</div>
+  </div>
+  <div class="row">
+    <div class="aspect">Auth</div>
+    <div class="from">none</div>
+    <div class="arrow">→</div>
+    <div class="to">Supabase magic-link + JWT + roles</div>
+  </div>
+  <div class="row">
+    <div class="aspect">Ingest mode</div>
+    <div class="from">sync · blocks 30–60s</div>
+    <div class="arrow">→</div>
+    <div class="to">async · BackgroundTasks + job polling</div>
+  </div>
+  <div class="row">
+    <div class="aspect">Push layer</div>
+    <div class="from">none</div>
+    <div class="arrow">→</div>
+    <div class="to">Resend daily digest + in-app feed</div>
+  </div>
+  <div class="row">
+    <div class="aspect">Scheduled jobs</div>
+    <div class="from">none</div>
+    <div class="arrow">→</div>
+    <div class="to"><code>pg_cron</code> · digest · snapshot · keepalive</div>
+  </div>
+  <div class="row">
+    <div class="aspect">Deploy</div>
+    <div class="from">manual local launch</div>
+    <div class="arrow">→</div>
+    <div class="to"><code>git push</code> · Vercel + Render auto-deploy</div>
+  </div>
+  <div class="row">
+    <div class="aspect">Access</div>
+    <div class="from">localhost only</div>
+    <div class="arrow">→</div>
+    <div class="to">public HTTPS · role-gated</div>
+  </div>
+  <div class="row">
+    <div class="aspect">Users</div>
+    <div class="from">1 developer</div>
+    <div class="arrow">→</div>
+    <div class="to">leaders · curator(s)</div>
+  </div>
+</div>
+
+<h3>What is NOT changing</h3>
+
+<ul>
+  <li><code>CLAUDE.md</code> ships verbatim as the agent's system prompt — same file drives local Claude Code today and the hosted agent in production. <strong>Zero schema drift.</strong></li>
+  <li>The 9 page types, mandatory Intel sections, parse anchors, citation discipline — all unchanged.</li>
+  <li>Wiki / queries separation stays — queries remain in browser <code>localStorage</code>, never written to the wiki.</li>
+  <li>Maker–Checker filter logic — Haiku scoring, three-band routing, adversarial Checker prompt — same.</li>
+  <li>The frontend's visual language and 9 page components — same code, just deployed elsewhere.</li>
+</ul>
+
+<div class="callout">
+  <strong>Net effect:</strong> the <em>behavior</em> of the system converges on what local dev already does. The <em>shape</em> changes — split into proper modules, hosted, multi-user, async, push-enabled. Nothing about <em>what the wiki looks like</em> or <em>how the agent reasons</em> changes.
+</div>
+
+<!-- =================== SEC 3 — FRONTEND VERCEL =================== -->
+<h2 id="sec3"><span class="num">03</span>Frontend — Vercel</h2>
+
+<h3>What lives here</h3>
+<ul>
+  <li><strong>React + Vite SPA</strong> built from <code>frontend-react/</code> — same code as today, no rewrite</li>
+  <li>Output of <code>vite build</code> → <code>dist/</code> directory (static HTML + JS + CSS bundle)</li>
+  <li>Served from <strong>Vercel's global CDN</strong> — no server-side rendering, no API routes on Vercel</li>
+  <li>One domain: <code>scapia-intel.vercel.app</code> (custom domain deferred to v2)</li>
+</ul>
+
+<h3>Route tree</h3>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — Frontend route tree, role-gated</div>
+  <svg viewBox="0 0 1180 380" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arRT" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><polygon points="0,0 9,4.5 0,9" fill="#ff6a1f"/></marker>
+    </defs>
+
+    <!-- Visitor box -->
+    <rect x="490" y="20" width="200" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="2" rx="5"/>
+    <text x="590" y="48" text-anchor="middle" font-family="system-ui" font-size="16" font-weight="700">VISITOR</text>
+    <text x="590" y="68" text-anchor="middle" font-family="system-ui" font-size="12" fill="#666">arrives at any route</text>
+
+    <line x1="590" y1="80" x2="590" y2="115" stroke="#1a1a1a" stroke-width="1.6" marker-end="url(#arRT)"/>
+
+    <!-- Public routes (no auth required → magic link login) -->
+    <rect x="80" y="120" width="1020" height="100" fill="#eaf2fa" stroke="#1e5fa8" stroke-width="2" rx="6"/>
+    <rect x="80" y="120" width="1020" height="6" fill="#1e5fa8"/>
+    <text x="100" y="148" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#1e5fa8">PUBLIC · visible to leader + curator after magic-link login</text>
+
+    <text x="120" y="184" font-family="monospace" font-size="14" font-weight="700">/</text>
+    <text x="155" y="184" font-family="system-ui" font-size="12" fill="#333">home + query</text>
+
+    <text x="320" y="184" font-family="monospace" font-size="14" font-weight="700">/vault</text>
+    <text x="385" y="184" font-family="system-ui" font-size="12" fill="#333">card grid</text>
+
+    <text x="520" y="184" font-family="monospace" font-size="14" font-weight="700">/intelligence</text>
+    <text x="635" y="184" font-family="system-ui" font-size="12" fill="#333">query threads</text>
+
+    <text x="800" y="184" font-family="monospace" font-size="14" font-weight="700">/intel-cards</text>
+    <text x="910" y="184" font-family="system-ui" font-size="12" fill="#333">5-tab cards</text>
+
+    <text x="120" y="208" font-family="monospace" font-size="14" font-weight="700">/sources</text>
+    <text x="200" y="208" font-family="system-ui" font-size="12" fill="#333">live feed</text>
+
+    <text x="320" y="208" font-family="monospace" font-size="14" font-weight="700">/account</text>
+    <text x="405" y="208" font-family="system-ui" font-size="12" fill="#333">profile + usage</text>
+
+    <line x1="590" y1="220" x2="590" y2="252" stroke="#ff6a1f" stroke-width="1.6" marker-end="url(#arRT)"/>
+    <text x="600" y="244" font-family="monospace" font-size="11" font-weight="700" fill="#b34a17">if JWT.role === 'curator'</text>
+
+    <!-- Curator-only routes -->
+    <rect x="80" y="258" width="1020" height="100" fill="#fff4ec" stroke="#ff6a1f" stroke-width="2" rx="6"/>
+    <rect x="80" y="258" width="1020" height="6" fill="#ff6a1f"/>
+    <text x="100" y="286" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#b34a17">CURATOR-ONLY · backend returns 403 if leader hits these</text>
+
+    <text x="120" y="322" font-family="monospace" font-size="14" font-weight="700">/curator/submit</text>
+    <text x="270" y="322" font-family="system-ui" font-size="12" fill="#333">paste raw source</text>
+
+    <text x="450" y="322" font-family="monospace" font-size="14" font-weight="700">/curator/jobs</text>
+    <text x="580" y="322" font-family="system-ui" font-size="12" fill="#333">async ingest queue</text>
+
+    <text x="780" y="322" font-family="monospace" font-size="14" font-weight="700">/curator/layer2</text>
+    <text x="930" y="322" font-family="system-ui" font-size="12" fill="#333">borderline review</text>
+
+    <text x="120" y="346" font-family="monospace" font-size="14" font-weight="700">/curator/log</text>
+    <text x="240" y="346" font-family="system-ui" font-size="12" fill="#333">append-only ingest history</text>
+  </svg>
+</div>
+
+<h3>Code changes for production-ready build</h3>
+
+<div class="change-list">
+  <div class="row">
+    <div class="aspect">API URL</div>
+    <div class="from">hardcoded <code>fetch('/api/...')</code> + Vite proxy</div>
+    <div class="arrow">→</div>
+    <div class="to"><code>fetch(`${import.meta.env.VITE_API_URL}/api/...`)</code></div>
+  </div>
+  <div class="row">
+    <div class="aspect">SPA rewrites</div>
+    <div class="from">missing — <code>/vault</code> 404s on hard refresh</div>
+    <div class="arrow">→</div>
+    <div class="to">add <code>vercel.json</code> → all routes rewrite to <code>/index.html</code></div>
+  </div>
+  <div class="row">
+    <div class="aspect">Auth flow</div>
+    <div class="from">none — anyone on <code>localhost:5173</code> is curator</div>
+    <div class="arrow">→</div>
+    <div class="to">Supabase magic-link → JWT in localStorage → sent with every fetch</div>
+  </div>
+  <div class="row">
+    <div class="aspect">Role gating</div>
+    <div class="from">none — every route visible</div>
+    <div class="arrow">→</div>
+    <div class="to"><code>&lt;RequireRole role="curator"&gt;</code> wrapper on <code>/curator/*</code></div>
+  </div>
+  <div class="row">
+    <div class="aspect">Bundle size</div>
+    <div class="from">single 919 KB chunk (262 KB gzip) · build warning</div>
+    <div class="arrow">→</div>
+    <div class="to">code-split <code>/curator/*</code> via <code>React.lazy()</code></div>
+  </div>
+  <div class="row">
+    <div class="aspect">Dead code</div>
+    <div class="from"><code>frontend/</code> (legacy v0) + <code>intelCards.js</code> Calibre demo data</div>
+    <div class="arrow">→</div>
+    <div class="to">deleted before first deploy</div>
+  </div>
+  <div class="row">
+    <div class="aspect">Design tokens</div>
+    <div class="from"><code>MI.d</code> tokens duplicated across 4 files</div>
+    <div class="arrow">→</div>
+    <div class="to">hoisted to single <code>src/tokens.js</code> module</div>
+  </div>
+  <div class="row">
+    <div class="aspect">Calibre residue</div>
+    <div class="from">stale strings in Sidebar, IntelCardsPage, AnswerCard parser</div>
+    <div class="arrow">→</div>
+    <div class="to">renamed to Scapia (parser keeps dual-match for safety)</div>
+  </div>
+</div>
+
+<h3>Environment variables (set in Vercel dashboard)</h3>
+
+<table>
+  <thead><tr><th>Variable</th><th>Purpose</th><th>Secret?</th></tr></thead>
+  <tbody>
+    <tr><td><code>VITE_API_URL</code></td><td>Backend endpoint, e.g. <code>https://scapia-backend.onrender.com</code></td><td>No (public)</td></tr>
+    <tr><td><code>VITE_SUPABASE_URL</code></td><td>Supabase project URL for client auth SDK</td><td>No</td></tr>
+    <tr><td><code>VITE_SUPABASE_ANON_KEY</code></td><td>Supabase anon key — safe for browsers, scoped by RLS</td><td>No</td></tr>
+    <tr><td><code>VITE_SENTRY_DSN</code></td><td>Sentry endpoint for frontend errors</td><td>No</td></tr>
+  </tbody>
+</table>
+
+<p style="font-size: 13px; color: #666; margin-top: -10px;">
+  <strong>Note:</strong> all <code>VITE_*</code> vars are baked into the bundle at build time and visible in browser DevTools. <strong>Never put secrets here</strong> — secrets live only on Render (next section).
+</p>
+
+<h3>Build & deploy flow</h3>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — From local edit to live frontend</div>
+  <svg viewBox="0 0 1180 200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arDP" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><polygon points="0,0 9,4.5 0,9" fill="#ff6a1f"/></marker>
+    </defs>
+
+    <!-- Step 1: edit -->
+    <rect x="20" y="60" width="180" height="80" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" rx="5"/>
+    <text x="110" y="88" text-anchor="middle" font-family="system-ui" font-size="14" font-weight="700">EDIT LOCALLY</text>
+    <text x="110" y="108" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">frontend-react/src/</text>
+    <text x="110" y="126" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">change a component</text>
+
+    <line x1="200" y1="100" x2="240" y2="100" stroke="#ff6a1f" stroke-width="1.8" marker-end="url(#arDP)"/>
+
+    <!-- Step 2: git push -->
+    <rect x="245" y="60" width="180" height="80" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" rx="5"/>
+    <text x="335" y="88" text-anchor="middle" font-family="system-ui" font-size="14" font-weight="700">GIT PUSH</text>
+    <text x="335" y="108" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">git push origin main</text>
+    <text x="335" y="126" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">to GitHub repo</text>
+
+    <line x1="425" y1="100" x2="465" y2="100" stroke="#ff6a1f" stroke-width="1.8" marker-end="url(#arDP)"/>
+
+    <!-- Step 3: Vercel builds -->
+    <rect x="470" y="60" width="220" height="80" fill="#eaf2fa" stroke="#1e5fa8" stroke-width="2" rx="5"/>
+    <text x="580" y="88" text-anchor="middle" font-family="system-ui" font-size="14" font-weight="700" fill="#1e5fa8">VERCEL BUILDS</text>
+    <text x="580" y="108" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">vite build → dist/</text>
+    <text x="580" y="126" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">~30 sec</text>
+
+    <line x1="690" y1="100" x2="730" y2="100" stroke="#ff6a1f" stroke-width="1.8" marker-end="url(#arDP)"/>
+
+    <!-- Step 4: CDN serve -->
+    <rect x="735" y="60" width="220" height="80" fill="#eaf2fa" stroke="#1e5fa8" stroke-width="2" rx="5"/>
+    <text x="845" y="88" text-anchor="middle" font-family="system-ui" font-size="14" font-weight="700" fill="#1e5fa8">SERVE FROM CDN</text>
+    <text x="845" y="108" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">scapia-intel.vercel.app</text>
+    <text x="845" y="126" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">global edge cache</text>
+
+    <line x1="955" y1="100" x2="995" y2="100" stroke="#ff6a1f" stroke-width="1.8" marker-end="url(#arDP)"/>
+
+    <!-- Step 5: user reload -->
+    <rect x="1000" y="60" width="160" height="80" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" rx="5"/>
+    <text x="1080" y="88" text-anchor="middle" font-family="system-ui" font-size="14" font-weight="700">USER LOADS</text>
+    <text x="1080" y="108" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">browser fetch</text>
+    <text x="1080" y="126" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">live in ~1 min</text>
+
+    <text x="590" y="175" text-anchor="middle" font-family="system-ui" font-size="12" fill="#666" font-style="italic">
+      No build step on your laptop, no manual upload. Push triggers everything.
+    </text>
+  </svg>
+</div>
+
+<div class="callout">
+  <strong>Static-only is the win:</strong> Vercel serves prebuilt HTML/JS/CSS files from a global CDN. No serverless functions, no API routes, no time-cap problem. The frontend has zero backend logic — every dynamic call goes to Render.
+</div>
+
+<!-- =================== SEC 4 — BACKEND RENDER =================== -->
+<h2 id="sec4"><span class="num">04</span>Backend — Render</h2>
+
+<h3>Why FastAPI, not the current <code>http.server</code></h3>
+
+<table>
+  <thead><tr><th>Concern</th><th>Today · <code>server.py</code></th><th>Target · FastAPI</th></tr></thead>
+  <tbody>
+    <tr><td>Concurrency</td><td>blocking · one request at a time</td><td>async-first · LLM waits don't block other requests</td></tr>
+    <tr><td>Validation</td><td>manual JSON parsing in handler</td><td>Pydantic models · auto-validate + 422 on mismatch</td></tr>
+    <tr><td>Docs</td><td>none</td><td>auto-generated OpenAPI at <code>/docs</code></td></tr>
+    <tr><td>Background work</td><td>can't — handler must finish to respond</td><td><code>BackgroundTasks</code> built-in · ack first, work after</td></tr>
+    <tr><td>SSE streaming</td><td>painful to implement</td><td><code>StreamingResponse</code> first-class</td></tr>
+    <tr><td>Routing</td><td>giant if/elif in one handler class</td><td><code>APIRouter</code> per concern · clean splits</td></tr>
+    <tr><td>Lines of code</td><td>1,446 in one file</td><td>~80 per route file · grep-friendly</td></tr>
+  </tbody>
+</table>
+
+<h3>The <code>server.py</code> → FastAPI migration, visualized</h3>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — One file becomes a module tree</div>
+  <svg viewBox="0 0 1180 540" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arMG" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><polygon points="0,0 9,4.5 0,9" fill="#ff6a1f"/></marker>
+    </defs>
+
+    <!-- LEFT: server.py monolith -->
+    <text x="200" y="34" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#c4422a">CURRENT · single file</text>
+
+    <rect x="60" y="50" width="280" height="460" fill="#fdf0ee" stroke="#c4422a" stroke-width="2" rx="6"/>
+    <text x="200" y="80" text-anchor="middle" font-family="system-ui" font-size="18" font-weight="700">server.py</text>
+    <text x="200" y="100" text-anchor="middle" font-family="monospace" font-size="11" fill="#c4422a">1,446 lines</text>
+
+    <line x1="80" y1="118" x2="320" y2="118" stroke="#c4422a" stroke-dasharray="3,3"/>
+
+    <text x="80" y="142" font-family="monospace" font-size="11" fill="#333">.env loader</text>
+    <text x="80" y="162" font-family="monospace" font-size="11" fill="#333">get_client()</text>
+    <text x="80" y="182" font-family="monospace" font-size="11" fill="#333">parse_frontmatter()</text>
+    <text x="80" y="202" font-family="monospace" font-size="11" fill="#333">list_wiki_pages()</text>
+    <text x="80" y="222" font-family="monospace" font-size="11" fill="#333">wiki_summary_for_filter()</text>
+    <text x="80" y="242" font-family="monospace" font-size="11" fill="#333">wiki_context_for_query()</text>
+    <text x="80" y="262" font-family="monospace" font-size="11" fill="#333">list_feed_items()</text>
+    <text x="80" y="282" font-family="monospace" font-size="11" fill="#333" font-weight="700">MAKER_PROMPT</text>
+    <text x="80" y="302" font-family="monospace" font-size="11" fill="#333" font-weight="700">CHECKER_PROMPT</text>
+    <text x="80" y="322" font-family="monospace" font-size="11" fill="#333" font-weight="700">QUERY_PROMPT</text>
+    <text x="80" y="342" font-family="monospace" font-size="11" fill="#333" font-weight="700">INGEST_PROMPT</text>
+    <text x="80" y="362" font-family="monospace" font-size="11" fill="#333">_split_frontmatter()</text>
+    <text x="80" y="382" font-family="monospace" font-size="11" fill="#333">_merge_frontmatter()</text>
+    <text x="80" y="402" font-family="monospace" font-size="11" fill="#333">_write_source_summary()</text>
+    <text x="80" y="422" font-family="monospace" font-size="11" fill="#333">_run_ingest_for_item()</text>
+    <text x="80" y="442" font-family="monospace" font-size="11" fill="#333">run_filter()</text>
+    <text x="80" y="462" font-family="monospace" font-size="11" fill="#333" font-style="italic">HTTPHandler class</text>
+    <text x="80" y="478" font-family="monospace" font-size="10" fill="#666" font-style="italic">(every endpoint as if/elif)</text>
+
+    <!-- Arrow across -->
+    <line x1="350" y1="280" x2="430" y2="280" stroke="#ff6a1f" stroke-width="2.5" marker-end="url(#arMG)"/>
+    <text x="390" y="270" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#b34a17">split</text>
+    <text x="390" y="295" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#b34a17">+ modularize</text>
+
+    <!-- RIGHT: FastAPI module tree -->
+    <text x="800" y="34" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#2d7a4f">TARGET · module tree</text>
+
+    <rect x="440" y="50" width="720" height="460" fill="#eef7f1" stroke="#2d7a4f" stroke-width="2" rx="6"/>
+    <text x="800" y="80" text-anchor="middle" font-family="system-ui" font-size="18" font-weight="700">backend/</text>
+    <text x="800" y="100" text-anchor="middle" font-family="monospace" font-size="11" fill="#2d7a4f">~80 lines per file · grep-friendly</text>
+
+    <line x1="460" y1="118" x2="1140" y2="118" stroke="#2d7a4f" stroke-dasharray="3,3"/>
+
+    <!-- 3 columns of files -->
+    <!-- col 1 -->
+    <text x="460" y="142" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">main.py</text>
+    <text x="540" y="142" font-family="monospace" font-size="10" fill="#666">FastAPI app · mounts routers</text>
+
+    <text x="460" y="162" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">settings.py</text>
+    <text x="540" y="162" font-family="monospace" font-size="10" fill="#666">env vars · pydantic-settings</text>
+
+    <text x="460" y="182" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">deps.py</text>
+    <text x="540" y="182" font-family="monospace" font-size="10" fill="#666">get_user() · require_role()</text>
+
+    <text x="460" y="202" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">supabase_client.py</text>
+    <text x="600" y="202" font-family="monospace" font-size="10" fill="#666">typed wrapper</text>
+
+    <text x="460" y="222" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">parser.py</text>
+    <text x="540" y="222" font-family="monospace" font-size="10" fill="#666">markdown → intel_section jsonb</text>
+
+    <text x="460" y="242" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">validator.py</text>
+    <text x="555" y="242" font-family="monospace" font-size="10" fill="#666">per-type frontmatter checks</text>
+
+    <!-- routes/ -->
+    <text x="460" y="278" font-family="monospace" font-size="12" font-weight="700" fill="#1a1a1a">routes/</text>
+    <text x="480" y="298" font-family="monospace" font-size="11" fill="#2d7a4f">public.py</text>
+    <text x="570" y="298" font-family="monospace" font-size="10" fill="#666">/api/pages · /page · /feed</text>
+
+    <text x="480" y="316" font-family="monospace" font-size="11" fill="#2d7a4f">leader.py</text>
+    <text x="570" y="316" font-family="monospace" font-size="10" fill="#666">/api/query (SSE)</text>
+
+    <text x="480" y="334" font-family="monospace" font-size="11" fill="#2d7a4f">curator.py</text>
+    <text x="580" y="334" font-family="monospace" font-size="10" fill="#666">/api/submit · /jobs · /layer2</text>
+
+    <text x="480" y="352" font-family="monospace" font-size="11" fill="#2d7a4f">internal.py</text>
+    <text x="580" y="352" font-family="monospace" font-size="10" fill="#666">/internal/* (cron-triggered)</text>
+
+    <!-- agent/ -->
+    <text x="800" y="142" font-family="monospace" font-size="12" font-weight="700" fill="#1a1a1a">agent/</text>
+    <text x="820" y="162" font-family="monospace" font-size="11" fill="#2d7a4f">client.py</text>
+    <text x="905" y="162" font-family="monospace" font-size="10" fill="#666">Anthropic + Agent SDK</text>
+
+    <text x="820" y="182" font-family="monospace" font-size="11" fill="#2d7a4f">tools.py</text>
+    <text x="895" y="182" font-family="monospace" font-size="10" fill="#666" font-weight="700">★ 7 tool functions</text>
+
+    <text x="820" y="202" font-family="monospace" font-size="11" fill="#2d7a4f">ingest_worker.py</text>
+    <text x="960" y="202" font-family="monospace" font-size="10" fill="#666">runs the agent loop</text>
+
+    <text x="820" y="222" font-family="monospace" font-size="11" fill="#2d7a4f">query_worker.py</text>
+    <text x="955" y="222" font-family="monospace" font-size="10" fill="#666">single LLM call (SSE)</text>
+
+    <text x="820" y="242" font-family="monospace" font-size="11" fill="#2d7a4f">prompts.py</text>
+    <text x="910" y="242" font-family="monospace" font-size="10" fill="#666">loads CLAUDE.md + QUERY_PROMPT</text>
+
+    <text x="820" y="262" font-family="monospace" font-size="11" fill="#2d7a4f">filter.py</text>
+    <text x="890" y="262" font-family="monospace" font-size="10" fill="#666">Maker–Checker · adversarial</text>
+
+    <!-- jobs/ -->
+    <text x="800" y="298" font-family="monospace" font-size="12" font-weight="700" fill="#1a1a1a">jobs/</text>
+    <text x="820" y="318" font-family="monospace" font-size="11" fill="#2d7a4f">digest.py</text>
+    <text x="900" y="318" font-family="monospace" font-size="10" fill="#666">Resend daily digest</text>
+
+    <text x="820" y="336" font-family="monospace" font-size="11" fill="#2d7a4f">snapshot.py</text>
+    <text x="912" y="336" font-family="monospace" font-size="10" fill="#666">nightly git snapshot</text>
+
+    <!-- root files -->
+    <line x1="460" y1="380" x2="1140" y2="380" stroke="#2d7a4f" stroke-dasharray="2,2"/>
+
+    <text x="460" y="402" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">CLAUDE.md</text>
+    <text x="555" y="402" font-family="monospace" font-size="10" fill="#666">copied from repo root on deploy · system prompt verbatim</text>
+
+    <text x="460" y="422" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">Dockerfile</text>
+    <text x="545" y="422" font-family="monospace" font-size="10" fill="#666">python:3.12-slim · uvicorn main:app</text>
+
+    <text x="460" y="442" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">requirements.txt</text>
+    <text x="600" y="442" font-family="monospace" font-size="10" fill="#666">fastapi · uvicorn · anthropic · supabase · resend · sentry-sdk</text>
+
+    <text x="800" y="486" text-anchor="middle" font-family="system-ui" font-size="11" fill="#666" font-style="italic">
+      Same logic, same prompts, same filter behavior — just split into pieces you can find.
+    </text>
+  </svg>
+</div>
+
+<h3>What maps where</h3>
+
+<table>
+  <thead><tr><th>Today in <code>server.py</code></th><th>Tomorrow in <code>backend/</code></th></tr></thead>
+  <tbody>
+    <tr><td><code>HTTPHandler.do_GET</code> / <code>do_POST</code> if-elif chain</td><td><code>routes/public.py</code> · <code>leader.py</code> · <code>curator.py</code> · <code>internal.py</code></td></tr>
+    <tr><td><code>run_filter()</code> + <code>MAKER_PROMPT</code> + <code>CHECKER_PROMPT</code></td><td><code>agent/filter.py</code> (logic unchanged)</td></tr>
+    <tr><td><code>_run_ingest_for_item()</code> (one big LLM call + JSON parse)</td><td><code>agent/ingest_worker.py</code> — <strong>real agent loop</strong> via Claude Agent SDK</td></tr>
+    <tr><td><code>list_wiki_pages()</code>, <code>load_wiki_page()</code>, <code>_write_source_summary()</code>, etc. — filesystem helpers</td><td><code>agent/tools.py</code> — <strong>same intent, hits Postgres + Storage</strong>, exposed as 7 tools to the LLM</td></tr>
+    <tr><td><code>QUERY_PROMPT</code> + inline streaming</td><td><code>agent/query_worker.py</code> + <code>agent/prompts.py</code> · proper SSE</td></tr>
+    <tr><td><code>wiki/log.md</code> append</td><td><code>ingest_log</code> table · <code>tools.append_log()</code></td></tr>
+    <tr><td><code>state.json</code> (queue + rejection log + health)</td><td><code>ingest_jobs</code> table · queryable, durable across restarts</td></tr>
+  </tbody>
+</table>
+
+<h3>The 7 tools — concrete code shape</h3>
+
+<ul>
+  <li>Each is a <strong>plain Python function</strong> in <code>agent/tools.py</code>, decorated and registered with the Claude Agent SDK</li>
+  <li>The LLM is told they exist via their JSON schemas — it cannot call anything else</li>
+  <li>One file, ~250 lines total, easy to audit</li>
+</ul>
+
+<pre style="font-size: 12px; padding: 18px;"><span class="c"># backend/agent/tools.py — sketch</span>
+
+@tool
+<span class="k">def</span> <span class="em">read_raw</span>(path: str) -&gt; str:
+    <span class="s">"""Download a raw source file from the storage bucket."""</span>
+    <span class="k">return</span> storage.download(<span class="s">"raw-sources"</span>, path).decode()
+
+@tool
+<span class="k">def</span> <span class="em">write_page</span>(path: str, frontmatter: dict, body: str) -&gt; dict:
+    <span class="s">"""Create or update a wiki page. Validates schema, parses Intel section, UPSERTs."""</span>
+    validate_schema(path, frontmatter, body)
+    intel = parse_intel_section(body)
+    supabase.from_(<span class="s">"pages"</span>).upsert({<span class="s">"path"</span>: path, <span class="s">"frontmatter"</span>: frontmatter,
+                                        <span class="s">"body"</span>: body, <span class="s">"intel_section"</span>: intel}).execute()
+    <span class="k">return</span> {<span class="s">"status"</span>: <span class="s">"ok"</span>, <span class="s">"path"</span>: path}
+
+<span class="c"># ...plus list_pages, read_page, upload_raw, append_log, mark_layer2</span></pre>
+
+<h3>Container & ops</h3>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — The Render container in one picture</div>
+  <svg viewBox="0 0 1180 280" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arCT" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><polygon points="0,0 9,4.5 0,9" fill="#ff6a1f"/></marker>
+    </defs>
+
+    <!-- Container outer box -->
+    <rect x="40" y="20" width="1100" height="240" fill="#fff" stroke="#2d7a4f" stroke-width="2.5" rx="8"/>
+    <text x="590" y="48" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" letter-spacing="3" fill="#2d7a4f">DOCKER CONTAINER ON RENDER · single uvicorn process</text>
+
+    <!-- 4 inner cells -->
+    <rect x="70" y="70" width="240" height="170" fill="#fafaf8" stroke="#1a1a1a" stroke-width="1.2" rx="4"/>
+    <text x="190" y="96" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700">FastAPI app</text>
+    <text x="190" y="120" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">routes/  agent/  jobs/</text>
+    <text x="190" y="142" text-anchor="middle" font-family="system-ui" font-size="11" fill="#333">handles HTTP</text>
+    <text x="190" y="160" text-anchor="middle" font-family="system-ui" font-size="11" fill="#333">runs the agent loop</text>
+    <text x="190" y="178" text-anchor="middle" font-family="system-ui" font-size="11" fill="#333">streams SSE</text>
+    <text x="190" y="208" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">async event loop</text>
+    <text x="190" y="224" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">~1-2 concurrent jobs</text>
+
+    <rect x="330" y="70" width="240" height="170" fill="#fafaf8" stroke="#1a1a1a" stroke-width="1.2" rx="4"/>
+    <text x="450" y="96" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700">CLAUDE.md</text>
+    <text x="450" y="118" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">copied at deploy</text>
+    <text x="450" y="142" text-anchor="middle" font-family="system-ui" font-size="11" fill="#333">loaded once at startup</text>
+    <text x="450" y="160" text-anchor="middle" font-family="system-ui" font-size="11" fill="#333">sent verbatim as</text>
+    <text x="450" y="178" text-anchor="middle" font-family="system-ui" font-size="11" fill="#333">system prompt on every call</text>
+    <text x="450" y="208" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">~900 lines</text>
+    <text x="450" y="224" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">zero drift vs local Claude Code</text>
+
+    <rect x="590" y="70" width="240" height="170" fill="#fafaf8" stroke="#1a1a1a" stroke-width="1.2" rx="4"/>
+    <text x="710" y="96" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700">BackgroundTasks</text>
+    <text x="710" y="118" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">FastAPI built-in</text>
+    <text x="710" y="142" text-anchor="middle" font-family="system-ui" font-size="11" fill="#333">submit acks instantly</text>
+    <text x="710" y="160" text-anchor="middle" font-family="system-ui" font-size="11" fill="#333">ingest runs after response</text>
+    <text x="710" y="178" text-anchor="middle" font-family="system-ui" font-size="11" fill="#333">curator polls <code>/api/jobs</code></text>
+    <text x="710" y="208" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">restart-recovery on startup:</text>
+    <text x="710" y="224" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">orphan jobs → status='failed'</text>
+
+    <rect x="850" y="70" width="270" height="170" fill="#fafaf8" stroke="#1a1a1a" stroke-width="1.2" rx="4"/>
+    <text x="985" y="96" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700">Keepalive</text>
+    <text x="985" y="118" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">pg_cron → /internal/keepalive</text>
+    <text x="985" y="142" text-anchor="middle" font-family="system-ui" font-size="11" fill="#333">pings every 14 min</text>
+    <text x="985" y="160" text-anchor="middle" font-family="system-ui" font-size="11" fill="#333">Render sleeps after 15 min idle</text>
+    <text x="985" y="178" text-anchor="middle" font-family="system-ui" font-size="11" fill="#333">we never let it sleep</text>
+    <text x="985" y="208" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">effective always-on</text>
+    <text x="985" y="224" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">on the free tier</text>
+  </svg>
+</div>
+
+<h3>Environment variables (set in Render dashboard)</h3>
+
+<table>
+  <thead><tr><th>Variable</th><th>Purpose</th><th>Secret?</th></tr></thead>
+  <tbody>
+    <tr><td><code>ANTHROPIC_API_KEY</code></td><td>Odyssey API key (Anthropic-compatible)</td><td><strong>Yes</strong></td></tr>
+    <tr><td><code>ANTHROPIC_BASE_URL</code></td><td><code>https://api.odyssey.scapia.in</code></td><td>No</td></tr>
+    <tr><td><code>ANTHROPIC_MODEL</code></td><td><code>claude-sonnet-4-7</code></td><td>No</td></tr>
+    <tr><td><code>SUPABASE_URL</code></td><td>Postgres + Storage endpoint</td><td>No</td></tr>
+    <tr><td><code>SUPABASE_SERVICE_KEY</code></td><td>Server-side full-access key (bypasses RLS)</td><td><strong>Yes</strong></td></tr>
+    <tr><td><code>INTERNAL_SECRET</code></td><td>64-byte token for <code>/internal/*</code> endpoints (cron)</td><td><strong>Yes</strong></td></tr>
+    <tr><td><code>RESEND_API_KEY</code></td><td>Daily digest send auth</td><td><strong>Yes</strong></td></tr>
+    <tr><td><code>RESEND_FROM_ADDRESS</code></td><td>e.g. <code>intel@scapia.cards</code></td><td>No</td></tr>
+    <tr><td><code>GITHUB_TOKEN</code></td><td>For nightly snapshot push to <code>snapshots</code> branch</td><td><strong>Yes</strong></td></tr>
+    <tr><td><code>GITHUB_REPO</code></td><td>e.g. <code>scapia/v1-LLM-wiki</code></td><td>No</td></tr>
+    <tr><td><code>ALLOWED_ORIGIN</code></td><td><code>https://scapia-intel.vercel.app</code> (CORS)</td><td>No</td></tr>
+    <tr><td><code>SENTRY_DSN</code></td><td>Backend error tracking</td><td>No</td></tr>
+    <tr><td>cost cap envs · 5 vars</td><td>per-user daily, per-ingest hard, monthly kill — locked in §09</td><td>No</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>What does NOT change in behavior:</strong> CLAUDE.md is identical between local Claude Code and the hosted agent. The Maker–Checker filter scores the same way. The 9 page types parse the same way. The Brief format renders the same way. We're refactoring the <em>shape</em> of the backend, not its <em>intelligence</em>.
+</div>
+
+<!-- =================== SEC 5 — DATABASE & STORAGE — SUPABASE =================== -->
+<h2 id="sec5"><span class="num">05</span>Database &amp; Storage — Supabase</h2>
+
+<h3>What we use from Supabase</h3>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — 4 of Supabase's 5 components are in v1</div>
+  <svg viewBox="0 0 1180 240" xmlns="http://www.w3.org/2000/svg">
+    <!-- Using -->
+    <text x="40" y="38" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#2d7a4f">USING ✓</text>
+
+    <rect x="40" y="50" width="260" height="100" fill="#eef7f1" stroke="#2d7a4f" stroke-width="1.8" rx="5"/>
+    <text x="170" y="80" text-anchor="middle" font-family="system-ui" font-size="16" font-weight="700">POSTGRES</text>
+    <text x="170" y="102" text-anchor="middle" font-family="system-ui" font-size="12" fill="#666">primary database</text>
+    <text x="170" y="124" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">10 tables · pg_cron · jsonb</text>
+    <text x="170" y="140" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">vanilla Postgres 15+</text>
+
+    <rect x="320" y="50" width="260" height="100" fill="#eef7f1" stroke="#2d7a4f" stroke-width="1.8" rx="5"/>
+    <text x="450" y="80" text-anchor="middle" font-family="system-ui" font-size="16" font-weight="700">STORAGE</text>
+    <text x="450" y="102" text-anchor="middle" font-family="system-ui" font-size="12" fill="#666">S3-compatible bucket</text>
+    <text x="450" y="124" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">raw-sources/  ·  signed URLs</text>
+    <text x="450" y="140" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">private · no public access</text>
+
+    <rect x="600" y="50" width="260" height="100" fill="#eef7f1" stroke="#2d7a4f" stroke-width="1.8" rx="5"/>
+    <text x="730" y="80" text-anchor="middle" font-family="system-ui" font-size="16" font-weight="700">AUTH</text>
+    <text x="730" y="102" text-anchor="middle" font-family="system-ui" font-size="12" fill="#666">magic-link login</text>
+    <text x="730" y="124" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">auth.users  ·  JWT  ·  JWKS</text>
+    <text x="730" y="140" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">backend verifies JWT</text>
+
+    <rect x="880" y="50" width="260" height="100" fill="#eef7f1" stroke="#2d7a4f" stroke-width="1.8" rx="5"/>
+    <text x="1010" y="80" text-anchor="middle" font-family="system-ui" font-size="16" font-weight="700">pg_cron</text>
+    <text x="1010" y="102" text-anchor="middle" font-family="system-ui" font-size="12" fill="#666">scheduled SQL</text>
+    <text x="1010" y="124" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">3 jobs · digest / snapshot / keepalive</text>
+    <text x="1010" y="140" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">triggers our /internal/* endpoints</text>
+
+    <!-- Not using -->
+    <text x="40" y="190" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#c4422a">NOT IN v1 ✗</text>
+
+    <rect x="40" y="200" width="540" height="30" fill="#fdf0ee" stroke="#c4422a" stroke-width="1" rx="3"/>
+    <text x="60" y="220" font-family="system-ui" font-size="13" font-weight="700">REALTIME</text>
+    <text x="170" y="220" font-family="system-ui" font-size="12" fill="#666">— we poll /api/jobs instead. Defer to v2.</text>
+
+    <rect x="600" y="200" width="540" height="30" fill="#fdf0ee" stroke="#c4422a" stroke-width="1" rx="3"/>
+    <text x="620" y="220" font-family="system-ui" font-size="13" font-weight="700">EDGE FUNCTIONS</text>
+    <text x="775" y="220" font-family="system-ui" font-size="12" fill="#666">— Render hosts our backend. Not needed.</text>
+  </svg>
+</div>
+
+<h3>The hybrid storage shape — how a wiki page lives in Postgres</h3>
+
+<ul>
+  <li><strong>Markdown stays canonical</strong> in a <code>body</code> column — the agent's output, verbatim</li>
+  <li><strong>Filter-able fields are denormalized</strong> into indexed columns — fast Vault filters</li>
+  <li><strong><code>jsonb</code> holds the rest</strong> — flexible, no migration when frontmatter shape evolves</li>
+</ul>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — One markdown file becomes one row, three ways</div>
+  <svg viewBox="0 0 1180 460" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arDB" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><polygon points="0,0 9,4.5 0,9" fill="#ff6a1f"/></marker>
+    </defs>
+
+    <!-- LEFT: incoming markdown -->
+    <text x="160" y="32" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#b34a17">LLM EMITS</text>
+
+    <rect x="30" y="48" width="260" height="380" fill="#1a1a1a" rx="5"/>
+    <text x="160" y="78" text-anchor="middle" font-family="monospace" font-size="11" fill="#ff6a1f">write_page(path, fm, body)</text>
+
+    <line x1="50" y1="90" x2="270" y2="90" stroke="#444"/>
+
+    <text x="50" y="112" font-family="monospace" font-size="10" fill="#fff">---</text>
+    <text x="50" y="128" font-family="monospace" font-size="10" fill="#fff">entity: Axis Atlas</text>
+    <text x="50" y="144" font-family="monospace" font-size="10" fill="#fff">type: competitor-entity</text>
+    <text x="50" y="160" font-family="monospace" font-size="10" fill="#fff">domains: [fintech, travel]</text>
+    <text x="50" y="176" font-family="monospace" font-size="10" fill="#fff">page_types: [competitor]</text>
+    <text x="50" y="192" font-family="monospace" font-size="10" fill="#fff">signal: threat</text>
+    <text x="50" y="208" font-family="monospace" font-size="10" fill="#fff">headline: "Axis Atlas..."</text>
+    <text x="50" y="224" font-family="monospace" font-size="10" fill="#fff">last_updated: 2026-05-02</text>
+    <text x="50" y="240" font-family="monospace" font-size="10" fill="#fff">---</text>
+    <text x="50" y="262" font-family="monospace" font-size="10" fill="#fff">## Fintech view</text>
+    <text x="50" y="278" font-family="monospace" font-size="10" fill="#fff">...content...</text>
+    <text x="50" y="298" font-family="monospace" font-size="10" fill="#fff">## Travel view</text>
+    <text x="50" y="314" font-family="monospace" font-size="10" fill="#fff">...content...</text>
+    <text x="50" y="334" font-family="monospace" font-size="10" fill="#fff">## Competitor Intel</text>
+    <text x="50" y="350" font-family="monospace" font-size="10" fill="#fff">### Where Scapia Wins</text>
+    <text x="50" y="366" font-family="monospace" font-size="10" fill="#fff">**point** ...</text>
+    <text x="50" y="382" font-family="monospace" font-size="10" fill="#fff">→ Action: ...</text>
+
+    <text x="160" y="412" text-anchor="middle" font-family="system-ui" font-size="11" fill="#aaa" font-style="italic">one markdown blob</text>
+
+    <!-- ARROW with label -->
+    <line x1="295" y1="220" x2="365" y2="220" stroke="#ff6a1f" stroke-width="2" marker-end="url(#arDB)"/>
+    <text x="330" y="208" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#b34a17">backend</text>
+    <text x="330" y="234" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">validates + parses</text>
+
+    <!-- RIGHT: pages table row, split into 3 zones -->
+    <text x="810" y="32" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#2d7a4f">ONE ROW IN  pages  TABLE</text>
+
+    <rect x="380" y="48" width="780" height="380" fill="#eef7f1" stroke="#2d7a4f" stroke-width="2" rx="5"/>
+
+    <!-- Zone 1: denormalized columns -->
+    <text x="400" y="78" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">① DENORMALIZED COLUMNS  ·  indexed  ·  for fast filters</text>
+
+    <rect x="400" y="86" width="740" height="120" fill="#fff" stroke="#2d7a4f" stroke-width="1" rx="3"/>
+    <text x="412" y="106" font-family="monospace" font-size="11" fill="#333">path           = "wiki/entities/axis-atlas.md"   <tspan fill="#666">(PK)</tspan></text>
+    <text x="412" y="122" font-family="monospace" font-size="11" fill="#333">folder         = "entities"                       <tspan fill="#666">→ Vault tab</tspan></text>
+    <text x="412" y="138" font-family="monospace" font-size="11" fill="#333">slug           = "axis-atlas"                     <tspan fill="#666">→ wikilink target</tspan></text>
+    <text x="412" y="154" font-family="monospace" font-size="11" fill="#333">type           = "competitor-entity"</text>
+    <text x="412" y="170" font-family="monospace" font-size="11" fill="#333">page_types     = ['competitor']                   <tspan fill="#666">GIN index</tspan></text>
+    <text x="412" y="186" font-family="monospace" font-size="11" fill="#333">domains        = ['fintech','travel']             <tspan fill="#666">GIN index</tspan></text>
+    <text x="412" y="202" font-family="monospace" font-size="11" fill="#333">signal         = "threat"   posture = NULL        <tspan fill="#666">B-tree</tspan></text>
+
+    <!-- Zone 2: body verbatim -->
+    <text x="400" y="232" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">② BODY  ·  text  ·  the agent's markdown verbatim</text>
+
+    <rect x="400" y="240" width="740" height="80" fill="#fff" stroke="#2d7a4f" stroke-width="1" rx="3"/>
+    <text x="412" y="262" font-family="monospace" font-size="11" fill="#333">## Fintech view</text>
+    <text x="412" y="278" font-family="monospace" font-size="11" fill="#333">...full markdown body, byte-for-byte what the LLM wrote...</text>
+    <text x="412" y="294" font-family="monospace" font-size="11" fill="#333">## Competitor Intel</text>
+    <text x="412" y="310" font-family="monospace" font-size="11" fill="#333">...                  <tspan fill="#666">→ snapshot job pushes this to GitHub nightly</tspan></text>
+
+    <!-- Zone 3: jsonb -->
+    <text x="400" y="346" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">③ JSONB COLUMNS  ·  flexible  ·  for everything else</text>
+
+    <rect x="400" y="354" width="365" height="64" fill="#fff" stroke="#2d7a4f" stroke-width="1" rx="3"/>
+    <text x="412" y="372" font-family="monospace" font-size="11" font-weight="700" fill="#1a1a1a">frontmatter jsonb</text>
+    <text x="412" y="388" font-family="monospace" font-size="10" fill="#666">full frontmatter as JSON</text>
+    <text x="412" y="402" font-family="monospace" font-size="10" fill="#666">esp. fields not denormalized</text>
+
+    <rect x="775" y="354" width="365" height="64" fill="#fff" stroke="#2d7a4f" stroke-width="1" rx="3"/>
+    <text x="787" y="372" font-family="monospace" font-size="11" font-weight="700" fill="#1a1a1a">intel_section jsonb</text>
+    <text x="787" y="388" font-family="monospace" font-size="10" fill="#666">pre-parsed Intel section</text>
+    <text x="787" y="402" font-family="monospace" font-size="10" fill="#666">frontend reads directly · no parsing</text>
+  </svg>
+</div>
+
+<h3>The 10 tables — at a glance</h3>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — Schema overview, grouped by purpose</div>
+  <svg viewBox="0 0 1180 470" xmlns="http://www.w3.org/2000/svg">
+    <!-- Group 1: Content -->
+    <text x="40" y="32" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#2d7a4f">CONTENT</text>
+
+    <rect x="40" y="44" width="540" height="60" fill="#fff" stroke="#2d7a4f" stroke-width="1.5" rx="3"/>
+    <text x="60" y="68" font-family="monospace" font-size="13" font-weight="700" fill="#1a1a1a">pages</text>
+    <text x="135" y="68" font-family="system-ui" font-size="12" fill="#333">— wiki pages · hybrid markdown + columns + jsonb</text>
+    <text x="60" y="90" font-family="monospace" font-size="10" fill="#666">PK: path  ·  indexes on folder, signal, posture, domains, page_types</text>
+
+    <rect x="600" y="44" width="540" height="60" fill="#fff" stroke="#2d7a4f" stroke-width="1.5" rx="3"/>
+    <text x="620" y="68" font-family="monospace" font-size="13" font-weight="700" fill="#1a1a1a">sources</text>
+    <text x="704" y="68" font-family="system-ui" font-size="12" fill="#333">— feed surface · auto-derived from pages via trigger</text>
+    <text x="620" y="90" font-family="monospace" font-size="10" fill="#666">PK: slug  ·  index on ingested_at DESC  ·  powers "What's New" panel</text>
+
+    <!-- Group 2: Ops -->
+    <text x="40" y="138" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#ff6a1f">OPERATIONS</text>
+
+    <rect x="40" y="150" width="540" height="60" fill="#fff" stroke="#ff6a1f" stroke-width="1.5" rx="3"/>
+    <text x="60" y="174" font-family="monospace" font-size="13" font-weight="700" fill="#1a1a1a">ingest_jobs</text>
+    <text x="178" y="174" font-family="system-ui" font-size="12" fill="#333">— async job queue · status state machine · agent_trace jsonb</text>
+    <text x="60" y="196" font-family="monospace" font-size="10" fill="#666">PK: id (uuid)  ·  status: queued|running|completed|layer2|rejected|failed|cost_capped</text>
+
+    <rect x="600" y="150" width="540" height="60" fill="#fff" stroke="#ff6a1f" stroke-width="1.5" rx="3"/>
+    <text x="620" y="174" font-family="monospace" font-size="13" font-weight="700" fill="#1a1a1a">ingest_log</text>
+    <text x="724" y="174" font-family="system-ui" font-size="12" fill="#333">— append-only audit · replaces wiki/log.md</text>
+    <text x="620" y="196" font-family="monospace" font-size="10" fill="#666">PK: id (bigserial)  ·  operation + description per row · written by tools.append_log()</text>
+
+    <!-- Group 3: Queries (NEW group) -->
+    <text x="40" y="244" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#1e5fa8">QUERIES  ·  conversation history + cost</text>
+
+    <rect x="40" y="256" width="540" height="60" fill="#fff" stroke="#1e5fa8" stroke-width="1.5" rx="3"/>
+    <text x="60" y="280" font-family="monospace" font-size="13" font-weight="700" fill="#1a1a1a">query_threads</text>
+    <text x="195" y="280" font-family="system-ui" font-size="12" fill="#333">— one row per thread · groups follow-ups</text>
+    <text x="60" y="302" font-family="monospace" font-size="10" fill="#666">PK: id (uuid)  ·  FK: user_id  ·  title auto-derived from first question</text>
+
+    <rect x="600" y="256" width="540" height="60" fill="#fff" stroke="#1e5fa8" stroke-width="1.5" rx="3"/>
+    <text x="620" y="280" font-family="monospace" font-size="13" font-weight="700" fill="#1a1a1a">query_log</text>
+    <text x="717" y="280" font-family="system-ui" font-size="12" fill="#333">— one row per turn · Q + A + tokens + cost</text>
+    <text x="620" y="302" font-family="monospace" font-size="10" fill="#666">FK: thread_id, user_id  ·  position (turn #)  ·  rolls up into user_daily_usage</text>
+
+    <!-- Group 4: Cost (ingest only now) -->
+    <text x="40" y="338" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#1e5fa8">INGEST COST</text>
+
+    <rect x="40" y="350" width="540" height="60" fill="#fff" stroke="#1e5fa8" stroke-width="1.5" rx="3"/>
+    <text x="60" y="374" font-family="monospace" font-size="13" font-weight="700" fill="#1a1a1a">ingest_cost_log</text>
+    <text x="215" y="374" font-family="system-ui" font-size="12" fill="#333">— per-job cost record · linked to ingest_jobs</text>
+    <text x="60" y="396" font-family="monospace" font-size="10" fill="#666">FK: job_id, user_id  ·  rolls up into monthly_spend view</text>
+
+    <!-- Group 5: Users + Email (compressed to same row as ingest_cost_log) -->
+    <text x="600" y="338" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#666">USERS + EMAIL</text>
+
+    <rect x="600" y="350" width="172" height="60" fill="#fff" stroke="#666" stroke-width="1.2" rx="3"/>
+    <text x="615" y="374" font-family="monospace" font-size="12" font-weight="700">user_profiles</text>
+    <text x="615" y="394" font-family="system-ui" font-size="10" fill="#333">name + role per user</text>
+
+    <rect x="784" y="350" width="172" height="60" fill="#fff" stroke="#666" stroke-width="1.2" rx="3"/>
+    <text x="799" y="374" font-family="monospace" font-size="12" font-weight="700">subscribers</text>
+    <text x="799" y="394" font-family="system-ui" font-size="10" fill="#333">digest opt-in list</text>
+
+    <rect x="968" y="350" width="172" height="60" fill="#fff" stroke="#666" stroke-width="1.2" rx="3"/>
+    <text x="983" y="374" font-family="monospace" font-size="12" font-weight="700">digest_log</text>
+    <text x="983" y="394" font-family="system-ui" font-size="10" fill="#333">sent-digest idempotency</text>
+
+    <text x="40" y="450" font-family="system-ui" font-size="11" fill="#666" font-style="italic">
+      10 tables · grouped 5 ways · views user_daily_usage + monthly_spend roll up cost across query_log + ingest_cost_log
+    </text>
+  </svg>
+</div>
+
+<h3>Query thread storage — moved from <code>localStorage</code> to Postgres</h3>
+
+<ul>
+  <li><strong>Today</strong> — past queries live in browser <code>localStorage</code> (key <code>mi_query_threads</code>), per device, lost on browser clear</li>
+  <li><strong>Production</strong> — moved into two new tables (<code>query_threads</code> + extended <code>query_log</code>), per user, durable, cross-device</li>
+  <li><strong>Wiki separation preserved</strong> — these tables sit alongside <code>pages</code>, never JOINed with it. The agent reads <code>pages</code>; query workers write to query_threads + query_log. No path back into the wiki.</li>
+</ul>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — Today (localStorage) vs Production (Supabase)</div>
+  <svg viewBox="0 0 1180 320" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arQT" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><polygon points="0,0 9,4.5 0,9" fill="#ff6a1f"/></marker>
+    </defs>
+
+    <!-- LEFT: localStorage -->
+    <text x="160" y="32" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#c4422a">TODAY · localStorage</text>
+
+    <rect x="30" y="48" width="280" height="240" fill="#fdf0ee" stroke="#c4422a" stroke-width="1.5" rx="5"/>
+    <text x="170" y="78" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700">mi_query_threads</text>
+    <text x="170" y="96" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">(browser localStorage)</text>
+
+    <line x1="50" y1="110" x2="290" y2="110" stroke="#c4422a" stroke-dasharray="3,3"/>
+
+    <text x="50" y="134" font-family="monospace" font-size="10" fill="#333">[</text>
+    <text x="50" y="150" font-family="monospace" font-size="10" fill="#333">  { id, turns: [</text>
+    <text x="50" y="166" font-family="monospace" font-size="10" fill="#333">      {question, answer, ts},</text>
+    <text x="50" y="182" font-family="monospace" font-size="10" fill="#333">      ...follow-ups</text>
+    <text x="50" y="198" font-family="monospace" font-size="10" fill="#333">    ], createdAt, updatedAt },</text>
+    <text x="50" y="214" font-family="monospace" font-size="10" fill="#333">  ...max 50 threads</text>
+    <text x="50" y="230" font-family="monospace" font-size="10" fill="#333">]</text>
+
+    <text x="170" y="270" text-anchor="middle" font-family="system-ui" font-size="11" fill="#666" font-style="italic">per device · lost on clear</text>
+
+    <!-- Arrow -->
+    <line x1="320" y1="168" x2="430" y2="168" stroke="#ff6a1f" stroke-width="2.5" marker-end="url(#arQT)"/>
+    <text x="375" y="158" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#b34a17">move to</text>
+    <text x="375" y="184" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">Postgres</text>
+
+    <!-- RIGHT: Postgres -->
+    <text x="780" y="32" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#2d7a4f">PRODUCTION · Supabase</text>
+
+    <rect x="440" y="48" width="350" height="240" fill="#eef7f1" stroke="#2d7a4f" stroke-width="1.5" rx="5"/>
+    <text x="615" y="76" text-anchor="middle" font-family="monospace" font-size="13" font-weight="700">query_threads</text>
+
+    <line x1="460" y1="92" x2="770" y2="92" stroke="#2d7a4f" stroke-dasharray="3,3"/>
+
+    <text x="460" y="116" font-family="monospace" font-size="11" fill="#333">id uuid PK</text>
+    <text x="460" y="134" font-family="monospace" font-size="11" fill="#333">user_id          → auth.users</text>
+    <text x="460" y="152" font-family="monospace" font-size="11" fill="#333">title            (auto from first Q)</text>
+    <text x="460" y="170" font-family="monospace" font-size="11" fill="#333">created_at</text>
+    <text x="460" y="188" font-family="monospace" font-size="11" fill="#333">updated_at</text>
+
+    <text x="615" y="220" text-anchor="middle" font-family="system-ui" font-size="11" font-weight="700" fill="#2d7a4f">one row per thread</text>
+    <text x="615" y="240" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666" font-style="italic">groups follow-ups · indexed by user_id + updated_at</text>
+
+    <rect x="810" y="48" width="350" height="240" fill="#eef7f1" stroke="#2d7a4f" stroke-width="1.5" rx="5"/>
+    <text x="985" y="76" text-anchor="middle" font-family="monospace" font-size="13" font-weight="700">query_log  (extended)</text>
+
+    <line x1="830" y1="92" x2="1140" y2="92" stroke="#2d7a4f" stroke-dasharray="3,3"/>
+
+    <text x="830" y="116" font-family="monospace" font-size="11" fill="#333">id bigserial PK</text>
+    <text x="830" y="134" font-family="monospace" font-size="11" fill="#333">thread_id        → query_threads</text>
+    <text x="830" y="152" font-family="monospace" font-size="11" fill="#333">position         (1, 2, 3 ...)</text>
+    <text x="830" y="170" font-family="monospace" font-size="11" fill="#333">user_id          → auth.users</text>
+    <text x="830" y="188" font-family="monospace" font-size="11" fill="#333">question · answer</text>
+    <text x="830" y="206" font-family="monospace" font-size="11" fill="#333">pages_read[]</text>
+    <text x="830" y="224" font-family="monospace" font-size="11" fill="#333">input_tokens · output_tokens</text>
+    <text x="830" y="242" font-family="monospace" font-size="11" fill="#333">cost_usd · created_at</text>
+
+    <text x="985" y="272" text-anchor="middle" font-family="system-ui" font-size="11" font-weight="700" fill="#2d7a4f">one row per turn</text>
+  </svg>
+</div>
+
+<table>
+  <thead><tr><th></th><th>Today (localStorage)</th><th>Production (Supabase)</th></tr></thead>
+  <tbody>
+    <tr><td>Storage</td><td>Browser only</td><td>Postgres, per user</td></tr>
+    <tr><td>Cross-device</td><td>✗</td><td>✓</td></tr>
+    <tr><td>Survives browser clear</td><td>✗</td><td>✓</td></tr>
+    <tr><td>Visible to other users</td><td>✗</td><td>✗ (scoped by <code>user_id</code>)</td></tr>
+    <tr><td>Written into the wiki?</td><td>✗</td><td>✗ (separate tables, never JOINed with <code>pages</code>)</td></tr>
+    <tr><td>Annual size at 30 q/user/day × 5 users</td><td>—</td><td>~1.6 MB · negligible vs 500 MB free tier</td></tr>
+  </tbody>
+</table>
+
+<h3>Storage bucket — <code>raw-sources/</code></h3>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — Raw files mirror today's directory layout, byte-for-byte</div>
+  <svg viewBox="0 0 1180 250" xmlns="http://www.w3.org/2000/svg">
+    <!-- Bucket header -->
+    <rect x="40" y="20" width="1100" height="40" fill="#1a1a1a" rx="4"/>
+    <text x="60" y="46" font-family="monospace" font-size="13" font-weight="700" fill="#ff6a1f">raw-sources/   ·   private bucket   ·   signed URLs only</text>
+
+    <!-- Subfolders -->
+    <rect x="40" y="80" width="260" height="80" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" rx="3"/>
+    <text x="170" y="106" text-anchor="middle" font-family="monospace" font-size="13" font-weight="700">competitive/</text>
+    <text x="170" y="126" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">2026-05-02-axis-atlas.md</text>
+    <text x="170" y="142" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">2026-05-03-cred-thread.md</text>
+
+    <rect x="320" y="80" width="260" height="80" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" rx="3"/>
+    <text x="450" y="106" text-anchor="middle" font-family="monospace" font-size="13" font-weight="700">regulatory/</text>
+    <text x="450" y="126" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">2026-05-01-rbi-circular.md</text>
+    <text x="450" y="142" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">…</text>
+
+    <rect x="600" y="80" width="260" height="80" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" rx="3"/>
+    <text x="730" y="106" text-anchor="middle" font-family="monospace" font-size="13" font-weight="700">market/</text>
+    <text x="730" y="126" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">macro trends</text>
+    <text x="730" y="142" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">category growth</text>
+
+    <rect x="880" y="80" width="260" height="80" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" rx="3"/>
+    <text x="1010" y="106" text-anchor="middle" font-family="monospace" font-size="13" font-weight="700">ambiguous/</text>
+    <text x="1010" y="126" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">multi-treatment</text>
+    <text x="1010" y="142" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">sources</text>
+
+    <!-- Access info -->
+    <rect x="40" y="180" width="540" height="50" fill="#eef7f1" stroke="#2d7a4f" stroke-width="1" rx="3"/>
+    <text x="60" y="200" font-family="monospace" font-size="11" font-weight="700" fill="#2d7a4f">AGENT WRITES</text>
+    <text x="60" y="218" font-family="monospace" font-size="11" fill="#333">tools.upload_raw(path, content)</text>
+
+    <rect x="600" y="180" width="540" height="50" fill="#fff4ec" stroke="#ff6a1f" stroke-width="1" rx="3"/>
+    <text x="620" y="200" font-family="monospace" font-size="11" font-weight="700" fill="#b34a17">AGENT READS</text>
+    <text x="620" y="218" font-family="monospace" font-size="11" fill="#333">tools.read_raw(path)   ·   no delete tool exists → effectively immutable</text>
+  </svg>
+</div>
+
+<h3>Triggers + Views — how derived state stays in sync</h3>
+
+<div class="hosts">
+  <div class="host" style="border-left-color: var(--green);">
+    <div class="name" style="color: var(--green);">TRIGGER · sync_sources_on_pages_change</div>
+    <div class="desc">
+      Fires on INSERT/UPDATE of <code>pages</code> when <code>folder='sources'</code>. Reads frontmatter, derives the matching <code>sources</code> row (headline, touches, filter_score), UPSERTs it. <strong>Agent calls one tool; DB handles consistency.</strong>
+    </div>
+  </div>
+  <div class="host" style="border-left-color: var(--blue);">
+    <div class="name" style="color: var(--blue);">VIEW · user_daily_usage</div>
+    <div class="desc">
+      Aggregates <code>query_log</code> + <code>ingest_cost_log</code> by user/day in IST. Powers pre-flight cost-cap checks and the <code>/api/me</code> "12 of 30 queries today" display. Single SELECT — no app-level aggregation.
+    </div>
+  </div>
+  <div class="host" style="border-left-color: var(--blue);">
+    <div class="name" style="color: var(--blue);">VIEW · monthly_spend</div>
+    <div class="desc">
+      Sums all cost rows for the current month in IST. Pre-flight check before every Anthropic call — blocks the request if the monthly hard kill threshold is hit.
+    </div>
+  </div>
+</div>
+
+<h3>Auth integration — the magic-link flow</h3>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — From email-entered to authenticated request</div>
+  <svg viewBox="0 0 1180 220" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arAU" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><polygon points="0,0 9,4.5 0,9" fill="#ff6a1f"/></marker>
+    </defs>
+
+    <rect x="20" y="60" width="160" height="80" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" rx="4"/>
+    <text x="100" y="92" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700">USER</text>
+    <text x="100" y="110" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666">enters email</text>
+    <text x="100" y="126" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">/login</text>
+
+    <line x1="180" y1="100" x2="218" y2="100" stroke="#ff6a1f" stroke-width="1.6" marker-end="url(#arAU)"/>
+
+    <rect x="222" y="60" width="200" height="80" fill="#eef7f1" stroke="#2d7a4f" stroke-width="1.5" rx="4"/>
+    <text x="322" y="92" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700" fill="#2d7a4f">SUPABASE AUTH</text>
+    <text x="322" y="110" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666">sends magic link</text>
+    <text x="322" y="126" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">signInWithOtp</text>
+
+    <line x1="422" y1="100" x2="460" y2="100" stroke="#ff6a1f" stroke-width="1.6" marker-end="url(#arAU)"/>
+
+    <rect x="464" y="60" width="200" height="80" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" rx="4"/>
+    <text x="564" y="92" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700">USER CLICKS</text>
+    <text x="564" y="110" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666">/auth/callback</text>
+    <text x="564" y="126" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">JWT in localStorage</text>
+
+    <line x1="664" y1="100" x2="702" y2="100" stroke="#ff6a1f" stroke-width="1.6" marker-end="url(#arAU)"/>
+
+    <rect x="706" y="60" width="220" height="80" fill="#fff4ec" stroke="#ff6a1f" stroke-width="1.5" rx="4"/>
+    <text x="816" y="92" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700" fill="#b34a17">BACKEND VERIFIES</text>
+    <text x="816" y="110" text-anchor="middle" font-family="system-ui" font-size="10" fill="#666">JWT vs JWKS (1ms)</text>
+    <text x="816" y="126" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">+ user_profiles lookup</text>
+
+    <line x1="926" y1="100" x2="964" y2="100" stroke="#ff6a1f" stroke-width="1.6" marker-end="url(#arAU)"/>
+
+    <rect x="968" y="60" width="190" height="80" fill="#1a1a1a" rx="4"/>
+    <text x="1063" y="92" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700" fill="#fff">AUTHENTICATED</text>
+    <text x="1063" y="110" text-anchor="middle" font-family="system-ui" font-size="10" fill="#aaa">role · leader/curator</text>
+    <text x="1063" y="126" text-anchor="middle" font-family="monospace" font-size="10" fill="#ff6a1f">~6ms overhead/req</text>
+
+    <text x="590" y="180" text-anchor="middle" font-family="system-ui" font-size="11" fill="#666" font-style="italic">
+      No password. No session cookie. JWT in localStorage, sent as Authorization: Bearer on every fetch.
+    </text>
+  </svg>
+</div>
+
+<h3>pg_cron — three scheduled jobs</h3>
+
+<table>
+  <thead><tr><th>Cron schedule</th><th>Job</th><th>What it triggers</th></tr></thead>
+  <tbody>
+    <tr><td><code>0 9 * * *</code></td><td>Daily digest</td><td>POST to <code>/internal/send-digest</code> · Resend sends yesterday's source summaries to subscribers</td></tr>
+    <tr><td><code>0 3 * * *</code></td><td>Nightly git snapshot</td><td>POST to <code>/internal/git-snapshot</code> · backend dumps all pages to markdown and pushes to <code>snapshots</code> branch on GitHub</td></tr>
+    <tr><td><code>*/14 * * * *</code></td><td>Keepalive</td><td>POST to <code>/internal/keepalive</code> · Render never sleeps · Supabase stays warm too</td></tr>
+  </tbody>
+</table>
+
+<p style="font-size: 13px; color: #666; margin-top: -10px;">
+  All three pass <code>X-Internal-Secret</code>. Times are IST. Each cron entry is a single <code>net.http_post</code> call — pg_cron is just the trigger; the backend does the actual work.
+</p>
+
+<h3>Migration from filesystem → Supabase</h3>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — One-time migration, then nightly reverse snapshot</div>
+  <svg viewBox="0 0 1180 320" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arMV" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><polygon points="0,0 9,4.5 0,9" fill="#ff6a1f"/></marker>
+      <marker id="arMVg" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><polygon points="0,0 9,4.5 0,9" fill="#888"/></marker>
+    </defs>
+
+    <!-- LEFT: filesystem (today) -->
+    <text x="170" y="32" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#c4422a">TODAY · filesystem</text>
+
+    <rect x="30" y="50" width="280" height="240" fill="#fdf0ee" stroke="#c4422a" stroke-width="1.5" rx="5"/>
+    <text x="60" y="80" font-family="monospace" font-size="12" font-weight="700">wiki/</text>
+    <text x="80" y="100" font-family="monospace" font-size="11" fill="#333">entities/*.md</text>
+    <text x="80" y="118" font-family="monospace" font-size="11" fill="#333">regulatory/*.md</text>
+    <text x="80" y="136" font-family="monospace" font-size="11" fill="#333">events/*.md</text>
+    <text x="80" y="154" font-family="monospace" font-size="11" fill="#333">sources/*.md</text>
+    <text x="80" y="172" font-family="monospace" font-size="11" fill="#333">log.md  ·  index.md</text>
+
+    <text x="60" y="206" font-family="monospace" font-size="12" font-weight="700">raw/</text>
+    <text x="80" y="224" font-family="monospace" font-size="11" fill="#333">competitive/*.md</text>
+    <text x="80" y="242" font-family="monospace" font-size="11" fill="#333">regulatory/*.md</text>
+
+    <text x="60" y="270" font-family="monospace" font-size="12" font-weight="700">state.json</text>
+
+    <!-- Arrow: migration -->
+    <line x1="320" y1="170" x2="430" y2="170" stroke="#ff6a1f" stroke-width="2.5" marker-end="url(#arMV)"/>
+    <text x="375" y="158" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#b34a17">one-time</text>
+    <text x="375" y="184" text-anchor="middle" font-family="monospace" font-size="11" fill="#666">migration script</text>
+
+    <!-- RIGHT: Supabase (target) -->
+    <text x="730" y="32" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#2d7a4f">PRODUCTION · Supabase</text>
+
+    <rect x="440" y="50" width="700" height="240" fill="#eef7f1" stroke="#2d7a4f" stroke-width="1.5" rx="5"/>
+
+    <text x="470" y="80" font-family="monospace" font-size="12" font-weight="700">Postgres tables</text>
+    <text x="490" y="102" font-family="monospace" font-size="11" fill="#333">wiki/*.md → pages  <tspan fill="#666">(INSERT loop, parse + denormalize)</tspan></text>
+    <text x="490" y="120" font-family="monospace" font-size="11" fill="#333">log.md     → ingest_log  <tspan fill="#666">(parse each line)</tspan></text>
+    <text x="490" y="138" font-family="monospace" font-size="11" fill="#333">state.json → discarded  <tspan fill="#666">(queue + counts recreated empty)</tspan></text>
+
+    <text x="470" y="172" font-family="monospace" font-size="12" font-weight="700">Storage bucket</text>
+    <text x="490" y="194" font-family="monospace" font-size="11" fill="#333">raw/* → raw-sources/  <tspan fill="#666">(upload via Supabase SDK)</tspan></text>
+
+    <text x="470" y="228" font-family="monospace" font-size="12" font-weight="700">Auth</text>
+    <text x="490" y="250" font-family="monospace" font-size="11" fill="#333">Studio invite → magic link → user_profiles row  <tspan fill="#666">(manual, 10 min)</tspan></text>
+
+    <text x="470" y="280" font-family="system-ui" font-size="11" fill="#666" font-style="italic">After migration: Postgres is canonical · filesystem retired</text>
+
+    <!-- Reverse arrow: nightly snapshot -->
+    <path d="M 440 240 Q 380 280 320 240" fill="none" stroke="#888" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#arMVg)"/>
+    <text x="375" y="306" text-anchor="middle" font-family="monospace" font-size="11" fill="#888">03:00 IST · nightly snapshot to GitHub <code>snapshots</code> branch</text>
+  </svg>
+</div>
+
+<h3>Free tier sanity — comfortable headroom</h3>
+
+<table>
+  <thead><tr><th>Resource</th><th>Free limit</th><th>Expected (50 pages, 2–5 users)</th><th>Headroom</th></tr></thead>
+  <tbody>
+    <tr><td>Database size</td><td>500 MB</td><td>~5 MB</td><td>100×</td></tr>
+    <tr><td>Egress / month</td><td>5 GB</td><td>~100 MB</td><td>50×</td></tr>
+    <tr><td>Storage size</td><td>1 GB</td><td>~50 MB raw files</td><td>20×</td></tr>
+    <tr><td>Auth users (MAU)</td><td>50,000</td><td>5</td><td>∞</td></tr>
+    <tr><td>pg_cron jobs</td><td>unlimited</td><td>3</td><td>∞</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>No paid plan needed for v1.</strong> Supabase pauses inactive free projects after 7 days — our keepalive (every 14 min) pings Postgres too, so we stay warm.
+</div>
+
+<h3>Deliberately deferred to v2</h3>
+
+<ul>
+  <li><strong>Realtime subscriptions</strong> — curator UI polls <code>/api/jobs</code> instead</li>
+  <li><strong>Row Level Security policies</strong> — backend enforces role gating in route handlers; RLS is defense-in-depth for v2 when access broadens</li>
+  <li><strong>pgvector semantic search</strong> — not needed until ~150+ pages (today: ~13)</li>
+  <li><strong>Read replicas</strong> — single instance is fine at this scale</li>
+  <li><strong>Branching (preview environments)</strong> — over-engineered for solo / pair work</li>
+</ul>
+
+<!-- =================== SEC 6 — LLM ACCESS — ODYSSEY =================== -->
+<h2 id="sec6"><span class="num">06</span>LLM access — Odyssey</h2>
+
+<h3>What Odyssey is</h3>
+
+<ul>
+  <li><strong>Scapia's Anthropic-compatible LLM gateway</strong> — drop-in replacement for <code>api.anthropic.com</code></li>
+  <li>Same API shape, same SDK — only the base URL and key change</li>
+  <li>Runs behind Scapia VPN · centralizes billing, audit, and policy</li>
+  <li>We never call Anthropic directly</li>
+</ul>
+
+<h3>Connection — three env vars</h3>
+
+<table>
+  <thead><tr><th>Variable</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td><code>ANTHROPIC_BASE_URL</code></td><td><code>https://api.odyssey.scapia.in</code></td></tr>
+    <tr><td><code>ANTHROPIC_API_KEY</code></td><td>Odyssey-issued key (secret)</td></tr>
+    <tr><td><code>ANTHROPIC_MODEL</code></td><td><code>claude-sonnet-4-7</code></td></tr>
+  </tbody>
+</table>
+
+<pre style="font-size: 12px; padding: 18px;"><span class="c"># backend/agent/client.py</span>
+<span class="k">from</span> anthropic <span class="k">import</span> Anthropic
+
+client = Anthropic(
+    base_url=settings.ANTHROPIC_BASE_URL,   <span class="anno"># Odyssey instead of api.anthropic.com</span>
+    api_key=settings.ANTHROPIC_API_KEY,
+)</pre>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — One arrow: Render → Odyssey → Anthropic (we only see Odyssey)</div>
+  <svg viewBox="0 0 1180 200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arOD" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><polygon points="0,0 9,4.5 0,9" fill="#ff6a1f"/></marker>
+    </defs>
+
+    <rect x="40" y="60" width="240" height="90" fill="#fff" stroke="#2d7a4f" stroke-width="2" rx="5"/>
+    <text x="160" y="92" text-anchor="middle" font-family="system-ui" font-size="16" font-weight="700">RENDER</text>
+    <text x="160" y="112" text-anchor="middle" font-family="system-ui" font-size="11" fill="#666">our backend</text>
+    <text x="160" y="132" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">anthropic SDK call</text>
+
+    <line x1="280" y1="105" x2="380" y2="105" stroke="#ff6a1f" stroke-width="2" marker-end="url(#arOD)"/>
+    <text x="330" y="95" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#b34a17">HTTPS</text>
+    <text x="330" y="125" text-anchor="middle" font-family="monospace" font-size="10" fill="#666">via Scapia VPN</text>
+
+    <rect x="380" y="40" width="380" height="130" fill="#1a1a1a" rx="6"/>
+    <rect x="380" y="40" width="380" height="7" fill="#ff6a1f"/>
+    <text x="570" y="80" text-anchor="middle" font-family="system-ui" font-size="20" font-weight="700" fill="#fff">ODYSSEY</text>
+    <text x="570" y="100" text-anchor="middle" font-family="monospace" font-size="11" fill="#ff6a1f">api.odyssey.scapia.in</text>
+    <text x="570" y="122" text-anchor="middle" font-family="system-ui" font-size="11" fill="#aaa">Anthropic-compatible gateway</text>
+    <text x="570" y="142" text-anchor="middle" font-family="system-ui" font-size="11" fill="#aaa">centralized billing · audit · policy</text>
+    <text x="570" y="160" text-anchor="middle" font-family="system-ui" font-size="10" fill="#888" font-style="italic">Scapia-managed</text>
+
+    <line x1="760" y1="105" x2="860" y2="105" stroke="#888" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#arOD)"/>
+    <text x="810" y="95" text-anchor="middle" font-family="monospace" font-size="10" fill="#888">proxied</text>
+
+    <rect x="860" y="60" width="280" height="90" fill="#fff" stroke="#888" stroke-width="1.2" stroke-dasharray="4,3" rx="5"/>
+    <text x="1000" y="92" text-anchor="middle" font-family="system-ui" font-size="16" font-weight="700" fill="#888">ANTHROPIC</text>
+    <text x="1000" y="112" text-anchor="middle" font-family="monospace" font-size="11" fill="#888">api.anthropic.com</text>
+    <text x="1000" y="132" text-anchor="middle" font-family="system-ui" font-size="10" fill="#888" font-style="italic">we never touch this directly</text>
+  </svg>
+</div>
+
+<h3>Model choice</h3>
+
+<table>
+  <thead><tr><th>Flow</th><th>Model</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>Ingest agent loop</td><td><code>claude-sonnet-4-7</code></td><td>Reasoning + tool use across 5–15 iterations</td></tr>
+    <tr><td>Query (single call, SSE)</td><td><code>claude-sonnet-4-7</code></td><td>Brief-format synthesis with full wiki context</td></tr>
+    <tr><td>Maker–Checker filter</td><td><code>claude-haiku-4-5</code></td><td>Fast 1–10 scoring · cheap · gates ingest before Sonnet runs</td></tr>
+  </tbody>
+</table>
+
+<h3>CLAUDE.md as the system prompt</h3>
+
+<ul>
+  <li>Copied into the container at deploy time · loaded once at startup</li>
+  <li>Sent <strong>verbatim</strong> as <code>system=</code> on every LLM call</li>
+  <li>Same file drives local Claude Code today and the hosted agent in production → <strong>zero schema drift</strong></li>
+</ul>
+
+<h3>Agent SDK setup</h3>
+
+<pre style="font-size: 12px; padding: 18px;"><span class="c"># backend/agent/client.py — sketch</span>
+CLAUDE_MD = (Path(__file__).parent.parent / <span class="s">"CLAUDE.md"</span>).read_text()
+
+agent = ClaudeAgent(
+    client=client,
+    system_prompt=CLAUDE_MD,           <span class="anno"># ← verbatim</span>
+    tools=ALL_TOOLS,                   <span class="anno"># ← the 7 from agent/tools.py</span>
+    model=settings.ANTHROPIC_MODEL,
+    max_iterations=<span class="em">30</span>,                <span class="anno"># ← hard ceiling, far above typical 5–15</span>
+)</pre>
+
+<h3>Failure modes</h3>
+
+<table>
+  <thead><tr><th>Failure</th><th>Handling</th></tr></thead>
+  <tbody>
+    <tr><td>Odyssey rate limit / 5xx</td><td>SDK retries 3× with exponential backoff</td></tr>
+    <tr><td>VPN drops mid-call</td><td>SDK error → job marked <code>failed</code> → curator retries</td></tr>
+    <tr><td>Model returns malformed JSON</td><td>Agent self-corrects next iteration (sees tool error)</td></tr>
+    <tr><td>30-iteration max hit</td><td>Job ends <code>failed</code> with full <code>agent_trace</code> for debug</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>From the app's perspective, Odyssey is just Anthropic.</strong> Same SDK, same models, same response shape. The only difference is one env var.
+</div>
+
+<!-- =================== SEC 9 — COST CAPS, RATE LIMITS & CIRCUIT BREAKERS =================== -->
+<h2 id="sec9"><span class="num">09</span>Cost caps, rate limits &amp; circuit breakers</h2>
+
+<h3>Six layers of defense — defense in depth</h3>
+
+<ul>
+  <li><strong>Budget-based</strong> guardrails protect total spend (daily / per-job / monthly)</li>
+  <li><strong>Rate-based</strong> guardrails protect against short-window spikes (per-minute, concurrency)</li>
+  <li><strong>Health-based</strong> guardrails halt the system if Odyssey degrades or costs go anomalous</li>
+  <li><strong>Pre-flight</strong> checks fire before any Anthropic call · <strong>in-flight</strong> checks fire per iteration · <strong>post-call</strong> updates the state</li>
+</ul>
+
+<div class="diagram">
+  <div class="diagram-title">Diagram — Order in which the 6 layers fire on every LLM-triggering action</div>
+  <svg viewBox="0 0 1180 580" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrCC" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><polygon points="0,0 9,4.5 0,9" fill="#ff6a1f"/></marker>
+    </defs>
+
+    <!-- TRIGGER -->
+    <rect x="430" y="20" width="320" height="60" fill="#fff" stroke="#1a1a1a" stroke-width="1.8" rx="4"/>
+    <text x="590" y="46" text-anchor="middle" font-family="system-ui" font-size="14" font-weight="700">/api/query · /api/submit · cron · etc.</text>
+    <text x="590" y="65" text-anchor="middle" font-family="system-ui" font-size="11" fill="#666">any LLM-triggering action arrives</text>
+
+    <line x1="590" y1="80" x2="590" y2="108" stroke="#ff6a1f" stroke-width="1.8" marker-end="url(#arrCC)"/>
+
+    <!-- PRE-FLIGHT box -->
+    <rect x="60" y="110" width="1060" height="180" fill="#fff4ec" stroke="#ff6a1f" stroke-width="2" rx="6"/>
+    <text x="84" y="138" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#b34a17">PRE-FLIGHT  ·  fires BEFORE any Anthropic call</text>
+
+    <!-- 6 pre-flight checks in a 3x2 grid -->
+    <rect x="80" y="150" width="335" height="60" fill="#fff" stroke="#ff6a1f" stroke-width="1" rx="3"/>
+    <text x="100" y="172" font-family="monospace" font-size="11" font-weight="700" fill="#1a1a1a">① Circuit breaker · open?</text>
+    <text x="100" y="190" font-family="system-ui" font-size="11" fill="#666">if 5 fails in 60s → 503 for 60s cooldown</text>
+
+    <rect x="425" y="150" width="335" height="60" fill="#fff" stroke="#ff6a1f" stroke-width="1" rx="3"/>
+    <text x="445" y="172" font-family="monospace" font-size="11" font-weight="700" fill="#1a1a1a">② Per-minute rate limit</text>
+    <text x="445" y="190" font-family="system-ui" font-size="11" fill="#666">&gt; 8 actions/user/min → 429 "slow down"</text>
+
+    <rect x="770" y="150" width="335" height="60" fill="#fff" stroke="#ff6a1f" stroke-width="1" rx="3"/>
+    <text x="790" y="172" font-family="monospace" font-size="11" font-weight="700" fill="#1a1a1a">③ Concurrent ingest semaphore</text>
+    <text x="790" y="190" font-family="system-ui" font-size="11" fill="#666">&gt; 2 running → status='queued' (wait)</text>
+
+    <rect x="80" y="220" width="335" height="60" fill="#fff" stroke="#ff6a1f" stroke-width="1" rx="3"/>
+    <text x="100" y="242" font-family="monospace" font-size="11" font-weight="700" fill="#1a1a1a">④ Per-user daily caps</text>
+    <text x="100" y="260" font-family="system-ui" font-size="11" fill="#666">30 queries · 200k input · 50k output → 429</text>
+
+    <rect x="425" y="220" width="335" height="60" fill="#fff" stroke="#ff6a1f" stroke-width="1" rx="3"/>
+    <text x="445" y="242" font-family="monospace" font-size="11" font-weight="700" fill="#1a1a1a">⑤ Cost velocity tripwire</text>
+    <text x="445" y="260" font-family="system-ui" font-size="11" fill="#666">&gt; $5/hour spend → 503 + Sentry alert</text>
+
+    <rect x="770" y="220" width="335" height="60" fill="#fff" stroke="#ff6a1f" stroke-width="1" rx="3"/>
+    <text x="790" y="242" font-family="monospace" font-size="11" font-weight="700" fill="#1a1a1a">⑥ Monthly hard kill</text>
+    <text x="790" y="260" font-family="system-ui" font-size="11" fill="#666">&gt; $200/month total → 503 system-wide</text>
+
+    <!-- Arrow down -->
+    <line x1="590" y1="290" x2="590" y2="320" stroke="#ff6a1f" stroke-width="1.8" marker-end="url(#arrCC)"/>
+    <text x="610" y="310" font-family="monospace" font-size="10" fill="#666">all 6 pass</text>
+
+    <!-- IN-FLIGHT box -->
+    <rect x="60" y="320" width="1060" height="140" fill="#fff" stroke="#1a1a1a" stroke-width="1.8" rx="6"/>
+    <text x="84" y="348" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#1a1a1a">IN-FLIGHT  ·  during the agent loop</text>
+
+    <rect x="80" y="360" width="510" height="80" fill="#fafafa" stroke="#1a1a1a" stroke-width="1" rx="3"/>
+    <text x="100" y="382" font-family="monospace" font-size="11" font-weight="700">⑦ Per-ingest token cap</text>
+    <text x="100" y="400" font-family="system-ui" font-size="11" fill="#666">100k input · 20k output per single ingest</text>
+    <text x="100" y="418" font-family="system-ui" font-size="10" fill="#666" font-style="italic">checked between agent iterations · job → 'cost_capped'</text>
+
+    <rect x="600" y="360" width="500" height="80" fill="#fafafa" stroke="#1a1a1a" stroke-width="1" rx="3"/>
+    <text x="620" y="382" font-family="monospace" font-size="11" font-weight="700">⑧ Hard iteration ceiling + stuck-loop detection</text>
+    <text x="620" y="400" font-family="system-ui" font-size="11" fill="#666">30-iter cap · same tool+args fails 3× → kill</text>
+    <text x="620" y="418" font-family="system-ui" font-size="10" fill="#666" font-style="italic">runaway loop protection · job → 'failed'</text>
+
+    <!-- Arrow down -->
+    <line x1="590" y1="460" x2="590" y2="488" stroke="#ff6a1f" stroke-width="1.8" marker-end="url(#arrCC)"/>
+
+    <!-- POST-CALL box -->
+    <rect x="60" y="490" width="1060" height="80" fill="#eef7f1" stroke="#2d7a4f" stroke-width="2" rx="6"/>
+    <text x="84" y="518" font-family="monospace" font-size="11" font-weight="700" letter-spacing="2" fill="#2d7a4f">POST-CALL  ·  accounting + state updates</text>
+    <text x="100" y="542" font-family="system-ui" font-size="12" fill="#333">INSERT tokens + cost → query_log / ingest_cost_log  ·  refresh user_daily_usage view</text>
+    <text x="100" y="560" font-family="system-ui" font-size="12" fill="#333">update circuit breaker state  ·  if cap was hit → Sentry event</text>
+  </svg>
+</div>
+
+<h3>The full layer table</h3>
+
+<table>
+  <thead><tr><th>#</th><th>Layer</th><th>Tier</th><th>Threshold (env var)</th><th>Action on trip</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Circuit breaker</td><td>Pre-flight · health</td><td>5 Anthropic errors / 60s window</td><td>503 for 60s · half-open probe · auto-recover</td></tr>
+    <tr><td>2</td><td>Per-minute rate limit</td><td>Pre-flight · rate</td><td><code>RATE_PER_USER_PER_MIN=8</code></td><td>429 · "slow down" banner</td></tr>
+    <tr><td>3</td><td>Concurrent ingest semaphore</td><td>Pre-flight · rate</td><td><code>MAX_CONCURRENT_INGESTS=2</code></td><td>Job stays <code>queued</code> until a slot frees</td></tr>
+    <tr><td>4</td><td>Per-user daily caps</td><td>Pre-flight · budget</td><td><code>PER_USER_DAILY_QUERY_COUNT=30</code><br><code>PER_USER_DAILY_INPUT_TOKENS=200000</code><br><code>PER_USER_DAILY_OUTPUT_TOKENS=50000</code></td><td>429 · banner with reset time</td></tr>
+    <tr><td>5</td><td>Cost velocity tripwire</td><td>Pre-flight · health</td><td><code>COST_VELOCITY_HOURLY_USD=5</code></td><td>503 · Sentry alert · halt until manual reset</td></tr>
+    <tr><td>6</td><td>Monthly hard kill</td><td>Pre-flight · budget</td><td><code>MONTHLY_HARD_KILL_USD=200</code></td><td>503 system-wide · operator must raise cap to resume</td></tr>
+    <tr><td>7</td><td>Per-ingest token cap</td><td>In-flight · budget</td><td><code>PER_INGEST_MAX_INPUT_TOKENS=100000</code><br><code>PER_INGEST_MAX_OUTPUT_TOKENS=20000</code></td><td>Job ends <code>cost_capped</code> · partial work discarded</td></tr>
+    <tr><td>8</td><td>Iteration ceiling + stuck-loop detection</td><td>In-flight · runtime</td><td>30 iterations max · same tool+args 3× fails</td><td>Job ends <code>failed</code> with <code>agent_trace</code></td></tr>
+  </tbody>
+</table>
+
+<h3>The three NEW additions (everything else was already locked)</h3>
+
+<div class="hosts">
+  <div class="host" style="border-left-color: var(--orange);">
+    <div class="name" style="color: var(--orange);">★ CIRCUIT BREAKER</div>
+    <div class="desc">
+      In-memory state per Render container. Tracks Anthropic failures in a sliding 60s window. State machine: <code>closed → open → half-open → closed</code>. On open, all LLM calls return 503 immediately for 60s. Then a single probe call decides whether to re-close or stay open. <strong>~30 lines of Python.</strong>
+    </div>
+  </div>
+  <div class="host" style="border-left-color: var(--orange);">
+    <div class="name" style="color: var(--orange);">★ CONCURRENT INGEST SEMAPHORE</div>
+    <div class="desc">
+      Database-level check before starting an agent loop: <code>SELECT count(*) FROM ingest_jobs WHERE status='running'</code>. If &ge; <code>MAX_CONCURRENT_INGESTS</code>, the job stays <code>queued</code> instead of starting. The next completing job picks it up. On Render free tier (~0.1 CPU), 2 concurrent is the practical max. <strong>~10 lines of Python.</strong>
+    </div>
+  </div>
+  <div class="host" style="border-left-color: var(--orange);">
+    <div class="name" style="color: var(--orange);">★ COST VELOCITY TRIPWIRE</div>
+    <div class="desc">
+      Single SQL view: <code>SUM(cost_usd) WHERE created_at &gt; now() - interval '1 hour'</code>. If above <code>COST_VELOCITY_HOURLY_USD</code> (default $5), halt all LLM calls and fire a Sentry alert. Operator must manually reset (env var bump or DB flag). Catches runaway loops, abuse, or bugs hammering the LLM. <strong>~15 lines of Python + 1 SQL view.</strong>
+    </div>
+  </div>
+</div>
+
+<h3>Response shape — what each tripped guardrail returns</h3>
+
+<table>
+  <thead><tr><th>Guardrail tripped</th><th>HTTP status</th><th>User-facing</th><th>Operator-facing</th></tr></thead>
+  <tbody>
+    <tr><td>Per-minute rate limit</td><td>429</td><td>"Slow down — try again in a few seconds"</td><td>—</td></tr>
+    <tr><td>Per-user daily cap</td><td>429</td><td>"Daily limit hit. Resets at 00:00 IST."</td><td>—</td></tr>
+    <tr><td>Concurrent ingest semaphore</td><td>202</td><td>Job appears queued, runs when slot frees</td><td>—</td></tr>
+    <tr><td>Circuit breaker open</td><td>503</td><td>"LLM gateway temporarily unavailable. Retry in 60s."</td><td>Sentry · breaker opened event</td></tr>
+    <tr><td>Cost velocity tripwire</td><td>503</td><td>"System paused — investigating high usage. Try later."</td><td>Sentry · velocity alert + spending dump</td></tr>
+    <tr><td>Monthly hard kill</td><td>503</td><td>"Monthly cap reached. Contact admin to raise."</td><td>Sentry · monthly kill alert</td></tr>
+    <tr><td>Per-ingest token cap</td><td>—</td><td>Job marked <code>cost_capped</code> in curator UI</td><td>Sentry · per-ingest cap event</td></tr>
+    <tr><td>30-iter / stuck loop</td><td>—</td><td>Job marked <code>failed</code> with trace</td><td>Sentry · agent stuck event</td></tr>
+  </tbody>
+</table>
+
+<h3>Environment variables — full set</h3>
+
+<table>
+  <thead><tr><th>Variable</th><th>Default</th><th>Tier</th></tr></thead>
+  <tbody>
+    <tr><td><code>RATE_PER_USER_PER_MIN</code></td><td><code>8</code></td><td>Rate</td></tr>
+    <tr><td><code>MAX_CONCURRENT_INGESTS</code></td><td><code>2</code></td><td>Rate</td></tr>
+    <tr><td><code>PER_USER_DAILY_QUERY_COUNT</code></td><td><code>30</code></td><td>Budget</td></tr>
+    <tr><td><code>PER_USER_DAILY_INPUT_TOKENS</code></td><td><code>200000</code></td><td>Budget</td></tr>
+    <tr><td><code>PER_USER_DAILY_OUTPUT_TOKENS</code></td><td><code>50000</code></td><td>Budget</td></tr>
+    <tr><td><code>PER_INGEST_MAX_INPUT_TOKENS</code></td><td><code>100000</code></td><td>Budget</td></tr>
+    <tr><td><code>PER_INGEST_MAX_OUTPUT_TOKENS</code></td><td><code>20000</code></td><td>Budget</td></tr>
+    <tr><td><code>COST_VELOCITY_HOURLY_USD</code></td><td><code>5</code></td><td>Health</td></tr>
+    <tr><td><code>MONTHLY_BUDGET_ALERT_USD</code></td><td><code>100</code></td><td>Budget · soft alert</td></tr>
+    <tr><td><code>MONTHLY_HARD_KILL_USD</code></td><td><code>200</code></td><td>Budget · hard halt</td></tr>
+    <tr><td><code>CIRCUIT_BREAKER_FAILURE_THRESHOLD</code></td><td><code>5</code></td><td>Health</td></tr>
+    <tr><td><code>CIRCUIT_BREAKER_OPEN_SECONDS</code></td><td><code>60</code></td><td>Health</td></tr>
+  </tbody>
+</table>
+
+<h3>Module layout in <code>backend/agent/</code></h3>
+
+<pre style="font-size: 12px; padding: 18px;"><span class="c">backend/agent/</span>
+  <span class="c">├── client.py</span>            <span class="anno"># Anthropic SDK · ALL calls go through `guarded_call()` below</span>
+  <span class="c">├── tools.py</span>             <span class="anno"># the 7 tools</span>
+  <span class="c">├── filter.py</span>            <span class="anno"># Maker–Checker</span>
+  <span class="c">├── ingest_worker.py</span>     <span class="anno"># agent loop</span>
+  <span class="c">├── query_worker.py</span>      <span class="anno"># single-call query</span>
+  <span class="c">└── guardrails/</span>          <span class="anno"># ★ NEW · 6 layers of defense</span>
+      <span class="c">├── circuit_breaker.py</span> <span class="anno"># layer 1 · in-memory state machine</span>
+      <span class="c">├── rate_limit.py</span>      <span class="anno"># layer 2 · per-minute window</span>
+      <span class="c">├── semaphore.py</span>       <span class="anno"># layer 3 · concurrent ingest DB check</span>
+      <span class="c">├── cost_caps.py</span>       <span class="anno"># layers 4 + 6 · daily + monthly</span>
+      <span class="c">├── velocity.py</span>        <span class="anno"># layer 5 · hourly spend tripwire</span>
+      <span class="c">└── guarded_call.py</span>    <span class="anno"># wraps every Anthropic SDK call · runs all checks</span></pre>
+
+<div class="callout">
+  <strong>Single entry point.</strong> Every Anthropic call in the codebase goes through <code>guarded_call(...)</code>. That function runs all 6 pre-flight checks, executes the call, runs post-call accounting, and updates the breaker. No exceptions, no bypass paths — guardrails can't be skipped by accident.
+</div>
+
+<h3>What this DOES and DOESN'T do</h3>
+
+<div class="split">
+  <div class="yes-side">
+    <div class="label">Covered ✓</div>
+    <ul style="font-size: 13.5px; margin: 8px 0 0 18px;">
+      <li>Total spend ceiling (per-user + monthly)</li>
+      <li>Short-window cost spikes (velocity + per-minute)</li>
+      <li>Anthropic / Odyssey degradation (circuit breaker)</li>
+      <li>Runaway agent loops (iteration cap + stuck detection)</li>
+      <li>Multiple curators submitting at once (concurrent semaphore)</li>
+      <li>Per-ingest cost runaway (token cap mid-loop)</li>
+    </ul>
+  </div>
+  <div class="no-side">
+    <div class="label">Deferred to v2</div>
+    <ul style="font-size: 13.5px; margin: 8px 0 0 18px;">
+      <li>Per-role tiered caps (leader vs curator have same limits in v1)</li>
+      <li>Adaptive caps based on user behavior</li>
+      <li>Anthropic prompt-cache awareness in spend calculation</li>
+      <li>Auto-pause on Sentry error-rate spikes (separate from circuit breaker)</li>
+      <li>Real-time cost dashboard for the operator (Supabase Studio is enough for v1)</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout">
+  <strong>Total v1 implementation cost:</strong> ~80 lines of Python across 6 small modules. Adds ~5ms latency per Anthropic call (mostly the SQL for daily-usage view + velocity check). Every check is idempotent and stateless except the circuit breaker, which is per-container in-memory state.
+</div>
+
+<footer class="foot">
+  Scapia Market Intelligence · Deployment Specifications · v1 · Sections A + B (3, 4, 5, 6) + §09
+</footer>
+
+</div>
+</body>
+</html>

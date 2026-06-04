@@ -1,0 +1,194 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #f1f6fa;
+  color: #111111;
+  font-family: 'Lexend Deca', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D0D0D0;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #AAAAAA;
+}
+
+/* Tooltip via data attribute */
+.has-tooltip {
+  position: relative;
+}
+.has-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #111;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  letter-spacing: 0.01em;
+}
+.has-tooltip:hover::after {
+  opacity: 1;
+}
+
+/* Hide scrollbar while keeping scroll functionality */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Light prose styles for wiki content */
+.prose-light {
+  color: #333333;
+  line-height: 1.75;
+  font-size: 0.9rem;
+}
+
+.prose-light h1,
+.prose-light h2,
+.prose-light h3,
+.prose-light h4 {
+  color: #111111;
+  margin-top: 1.4em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.prose-light h1 { font-size: 1.4rem; }
+.prose-light h2 { font-size: 1.15rem; border-bottom: 1px solid #E8E8E8; padding-bottom: 0.35em; }
+.prose-light h3 { font-size: 1rem; }
+
+.prose-light p {
+  margin-bottom: 0.85em;
+}
+
+.prose-light ul,
+.prose-light ol {
+  padding-left: 1.5em;
+  margin-bottom: 0.85em;
+}
+
+.prose-light li {
+  margin-bottom: 0.3em;
+}
+
+.prose-light code {
+  background: #F3F4F6;
+  border: 1px solid #E8E8E8;
+  padding: 0.15em 0.45em;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.82em;
+  color: #111111;
+}
+
+.prose-light pre {
+  background: #F3F4F6;
+  border: 1px solid #E8E8E8;
+  border-radius: 8px;
+  padding: 1em 1.25em;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+.prose-light pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #111111;
+}
+
+.prose-light blockquote {
+  border-left: 3px solid #ce3e00;
+  padding-left: 1em;
+  color: #666666;
+  font-style: italic;
+  margin-bottom: 0.85em;
+}
+
+.prose-light table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1em;
+  font-size: 0.875em;
+}
+
+.prose-light th,
+.prose-light td {
+  border: 1px solid #E8E8E8;
+  padding: 0.5em 0.85em;
+  text-align: left;
+}
+
+.prose-light th {
+  background: #F3F4F6;
+  color: #111111;
+  font-weight: 600;
+}
+
+.prose-light td {
+  color: #333333;
+}
+
+.prose-light a {
+  color: #ce3e00;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-light a:hover {
+  color: #b83600;
+}
+
+.prose-light hr {
+  border: none;
+  border-top: 1px solid #E8E8E8;
+  margin: 1.5em 0;
+}
+
+.prose-light strong {
+  color: #111111;
+  font-weight: 600;
+}

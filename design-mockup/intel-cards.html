@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intel Cards — Design Mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lexend Deca', sans-serif;
+      background: #f1f6fa;
+      color: #111;
+      min-height: 100vh;
+    }
+
+    /* ── Page header ─────────────────────────── */
+    .page-header {
+      background: #fff;
+      border-bottom: 1px solid #E8E8E8;
+      padding: 20px 32px 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .page-header-top {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .page-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .page-subtitle {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 4px;
+    }
+    .live-badge {
+      font-size: 0.7rem;
+      color: #888;
+      background: #F3F4F6;
+      border: 1px solid #E8E8E8;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-weight: 500;
+    }
+
+    /* ── Main tabs ───────────────────────────── */
+    .main-tabs { display: flex; }
+    .main-tab {
+      padding: 10px 18px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      color: #888;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .main-tab.active {
+      border-bottom-color: #ce3e00;
+      color: #ce3e00;
+    }
+    .tab-pill {
+      border-radius: 999px;
+      padding: 1px 7px;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+    .main-tab.active .tab-pill {
+      background: #FFF3EC;
+      color: #ce3e00;
+      border: 1px solid #FDBA74;
+    }
+    .main-tab:not(.active) .tab-pill {
+      background: #F3F4F6;
+      color: #888;
+      border: 1px solid #E8E8E8;
+    }
+
+    /* ── Competitor selector row ─────────────── */
+    .selector-row {
+      background: #fff;
+      border-bottom: 1px solid #E8E8E8;
+      padding: 10px 32px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      position: sticky;
+      top: 89px;
+      z-index: 9;
+    }
+    .selector-row::-webkit-scrollbar { display: none; }
+
+    .selector-pill {
+      position: relative;
+      overflow: hidden;
+      padding: 9px 14px 9px 18px;
+      border-radius: 10px;
+      border: 1px solid #E8E8E8;
+      background: #fff;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 118px;
+    }
+    .selector-pill::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      border-radius: 2px 0 0 2px;
+    }
+    .selector-pill.threat::before   { background: #DC2626; }
+    .selector-pill.opportunity::before { background: #16A34A; }
+    .selector-pill.watch::before    { background: #D97706; }
+
+    .selector-pill.active {
+      background: #FAFAFA;
+      border-color: #B0B0B0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    }
+    .selector-pill.active::before {
+      width: 5px;
+    }
+    .selector-pill.active .pill-name {
+      color: #000;
+    }
+    .selector-pill:hover:not(.active) {
+      background: #FAFAFA;
+      border-color: #D0D0D0;
+    }
+
+    .pill-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #111;
+      letter-spacing: -0.01em;
+    }
+    .pill-signal {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .pill-signal.threat      { color: #DC2626; }
+    .pill-signal.opportunity { color: #16A34A; }
+    .pill-signal.watch       { color: #D97706; }
+    .pill-vital {
+      font-size: 0.68rem;
+      color: #999;
+      font-weight: 500;
+    }
+
+    /* ── Content area ────────────────────────── */
+    .content {
+      padding: 24px 32px 48px;
+    }
+
+    /* ── Battlecard ──────────────────────────── */
+    .battlecard {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #E8E8E8;
+      border-left: 4px solid #16A34A; /* signal color — opportunity */
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .battlecard.threat      { border-left-color: #DC2626; }
+    .battlecard.opportunity { border-left-color: #16A34A; }
+    .battlecard.watch       { border-left-color: #D97706; }
+
+    /* Card header */
+    .card-header {
+      padding: 24px 28px 20px;
+      border-bottom: 1px solid #F0F0F0;
+    }
+    .card-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .card-name {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #111;
+      line-height: 1.1;
+    }
+    .card-decision {
+      font-size: 0.7rem;
+      color: #999;
+      margin-top: 5px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    .card-signal-badge {
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .card-signal-badge.opportunity { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; }
+    .card-signal-badge.threat      { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+    .card-signal-badge.watch       { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+
+    /* Vitals chips */
+    .vitals-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .vital-chip {
+      background: #111;
+      border-radius: 8px;
+      padding: 7px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .vital-value {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.1;
+    }
+    .vital-note  {
+      font-size: 0.62rem;
+      color: #9CA3AF;
+      line-height: 1.1;
+    }
+    .vital-label {
+      font-size: 0.56rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #6B7280;
+      line-height: 1;
+    }
+
+    /* ── Win / Loss two-column grid ──────────── */
+    .winloss-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid #F0F0F0;
+    }
+
+    .wins-col {
+      padding: 20px 24px;
+      border-right: 1px solid #E8E8E8;
+      background: #F8FDF9;
+    }
+    .losses-col {
+      padding: 20px 24px;
+      background: #FFF8F8;
+    }
+
+    .col-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid;
+    }
+    .wins-col   .col-label { border-bottom-color: #D1FAE5; }
+    .losses-col .col-label { border-bottom-color: #FEE2E2; }
+    .wins-col   .col-label { color: #16A34A; }
+    .losses-col .col-label { color: #DC2626; }
+
+    .col-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .wins-col   .col-dot { background: #16A34A; }
+    .losses-col .col-dot { background: #DC2626; }
+
+    /* Win/loss item */
+    .wl-item {
+      padding: 11px 0;
+      border-bottom: 1px solid #F5F5F5;
+    }
+    .wl-item:first-of-type { padding-top: 0; }
+    .wl-item:last-of-type  { border-bottom: none; padding-bottom: 0; }
+
+    .wl-point {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+      margin-bottom: 5px;
+    }
+    .wl-context {
+      font-size: 0.74rem;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+    .wl-action {
+      font-size: 0.71rem;
+      color: #ce3e00;
+      font-weight: 600;
+      display: flex;
+      align-items: flex-start;
+      gap: 5px;
+      line-height: 1.4;
+    }
+    .wl-action-arrow { flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Calibre Implication ─────────────────── */
+    .implication-wrap {
+      padding: 0 24px 20px;
+    }
+    .implication {
+      background: #111;
+      border-radius: 12px;
+      padding: 18px 22px;
+    }
+    .implication-label {
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #ce3e00;
+      margin-bottom: 12px;
+    }
+    .impl-item {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .impl-item:last-child { margin-bottom: 0; }
+    .impl-arrow {
+      color: #ce3e00;
+      flex-shrink: 0;
+      margin-top: 2px;
+      font-size: 0.82rem;
+    }
+    .impl-text {
+      font-size: 0.82rem;
+      color: #D1D5DB;
+      line-height: 1.55;
+    }
+
+    /* ── Recent Moves ────────────────────────── */
+    .recent-moves {
+      padding: 14px 28px 20px;
+    }
+    .moves-label {
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #bbb;
+      margin-bottom: 10px;
+    }
+    .moves-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+    .move-item {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding-right: 20px;
+      margin-right: 20px;
+      border-right: 1px solid #EBEBEB;
+    }
+    .move-item:last-child {
+      border-right: none;
+      padding-right: 0;
+      margin-right: 0;
+    }
+    .move-date  { font-size: 0.68rem; color: #ce3e00; font-weight: 700; flex-shrink: 0; }
+    .move-event { font-size: 0.78rem; color: #555; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Page header ── -->
+  <div class="page-header">
+    <div class="page-header-top">
+      <div>
+        <div class="page-title">Intel Cards</div>
+        <div class="page-subtitle">Where Calibre wins, where they're ahead — rendered live from the wiki.</div>
+      </div>
+      <div class="live-badge">Live · wiki-sourced</div>
+    </div>
+    <div class="main-tabs">
+      <button class="main-tab active">
+        Competitor <span class="tab-pill">5</span>
+      </button>
+      <button class="main-tab">
+        Regulatory <span class="tab-pill">2</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Competitor selector ── -->
+  <div class="selector-row">
+    <div class="selector-pill opportunity active">
+      <span class="pill-name">MyFitnessPal</span>
+      <span class="pill-signal opportunity">Opportunity</span>
+      <span class="pill-vital">$80/yr</span>
+    </div>
+    <div class="selector-pill watch">
+      <span class="pill-name">Lose It!</span>
+      <span class="pill-signal watch">Watch</span>
+      <span class="pill-vital">$40/yr</span>
+    </div>
+    <div class="selector-pill threat">
+      <span class="pill-name">Cronometer</span>
+      <span class="pill-signal threat">Threat</span>
+      <span class="pill-vital">$50/yr</span>
+    </div>
+    <div class="selector-pill threat">
+      <span class="pill-name">HealthifyMe</span>
+      <span class="pill-signal threat">Threat</span>
+      <span class="pill-vital">$45M raised</span>
+    </div>
+    <div class="selector-pill watch">
+      <span class="pill-name">Fitbod</span>
+      <span class="pill-signal watch">Watch</span>
+      <span class="pill-vital">400M+ pts</span>
+    </div>
+  </div>
+
+  <!-- ── Scrollable card area ── -->
+  <div class="content">
+    <div class="battlecard">
+
+      <!-- Card header -->
+      <div class="card-header">
+        <div class="card-header-row">
+          <div>
+            <div class="card-name">MyFitnessPal</div>
+            <div class="card-decision">Informs: Pricing · Positioning</div>
+          </div>
+          <span class="card-signal-badge opportunity">Opportunity</span>
+        </div>
+        <div class="vitals-row">
+          <div class="vital-chip">
+            <span class="vital-value">$80/yr</span>
+            <span class="vital-note">+60% Mar 2023</span>
+            <span class="vital-label">Annual price</span>
+          </div>
+          <div class="vital-chip">
+            <span class="vital-value">4.2★</span>
+            <span class="vital-note">was 4.7</span>
+            <span class="vital-label">App Store</span>
+          </div>
+          <div class="vital-chip">
+            <span class="vital-value">200M+</span>
+            <span class="vital-label">MAU</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Win / Loss columns -->
+      <div class="winloss-grid">
+
+        <div class="wins-col">
+          <div class="col-label">
+            <span class="col-dot"></span>
+            Where Calibre Wins
+          </div>
+
+          <div class="wl-item">
+            <div class="wl-point">Photo logging vs barcode paywall</div>
+            <div class="wl-context">MFP locked its barcode scanner behind premium in Oct 2022. Calibre's photo-based logging requires no paywall and no manual scanning — the exact gap MFP users are complaining about.</div>
+            <div class="wl-action"><span class="wl-action-arrow">→</span> Lead paid acquisition copy with "log meals by photo, no paywall" directly against MFP churners.</div>
+          </div>
+
+          <div class="wl-item">
+            <div class="wl-point">No pricing controversy baggage</div>
+            <div class="wl-context">MFP doubled premium to $79.99/year in Mar 2023, triggering sustained Reddit-visible churn. Calibre has no legacy pricing baggage to defend.</div>
+            <div class="wl-action"><span class="wl-action-arrow">→</span> Position Calibre as the clean-slate alternative — no surprise price hikes, no feature lockouts.</div>
+          </div>
+        </div>
+
+        <div class="losses-col">
+          <div class="col-label">
+            <span class="col-dot"></span>
+            Where They're Ahead
+          </div>
+
+          <div class="wl-item">
+            <div class="wl-point">Database scale: 14M+ food items</div>
+            <div class="wl-context">MFP's food database is the largest in the category — 14M items, Vitess/PlanetScale infrastructure, and entries dating back 15+ years. This is a genuine moat.</div>
+            <div class="wl-action"><span class="wl-action-arrow">→</span> Acknowledge the gap honestly. Compete on AI accuracy for common foods, not database breadth.</div>
+          </div>
+
+          <div class="wl-item">
+            <div class="wl-point">Brand recognition and installed base</div>
+            <div class="wl-context">MFP is the default answer when anyone searches "calorie tracking app." Calibre has no brand equity yet in this category.</div>
+            <div class="wl-action"><span class="wl-action-arrow">→</span> Target acquisition at the moment of MFP frustration — intercept churn, don't fight awareness.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Calibre Implication -->
+      <div class="implication-wrap">
+        <div class="implication">
+          <div class="implication-label">Calibre Implication</div>
+          <div class="impl-item">
+            <span class="impl-arrow">→</span>
+            <span class="impl-text">Target MFP churners explicitly in paid acquisition — the user intent is already primed</span>
+          </div>
+          <div class="impl-item">
+            <span class="impl-arrow">→</span>
+            <span class="impl-text">Position photo logging as the direct answer to the barcode paywall complaint</span>
+          </div>
+          <div class="impl-item">
+            <span class="impl-arrow">→</span>
+            <span class="impl-text">Don't compete on database size — compete on AI ease and no-paywall UX</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Moves -->
+      <div class="recent-moves">
+        <div class="moves-label">Recent Moves</div>
+        <div class="moves-list">
+          <div class="move-item">
+            <span class="move-date">Mar 2023</span>
+            <span class="move-event">Premium price doubled to $79.99/year</span>
+          </div>
+          <div class="move-item">
+            <span class="move-date">Oct 2022</span>
+            <span class="move-event">Barcode scanner moved behind paywall</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
