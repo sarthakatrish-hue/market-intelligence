@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Scapia Market Intelligence · Product Handbook</title>
+<style>
+  :root{
+    --ink:#0d0e10; --paper:#fbfaf7; --line:#d8d2c5;
+    --orange:#ce3e00; --orange_hi:#fff4ec;
+    --soft:rgba(13,14,16,0.58); --mut:rgba(13,14,16,0.32);
+    --tag:#ecebe7; --hi:#fffaf3;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
+    font:15px/1.62 "Lexend Deca",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:none;width:100%;margin:0 auto;padding:48px 64px 96px}
+  @media (max-width:900px){ .wrap{padding:36px 28px 80px} }
+  .crest{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:28px}
+  .crest .mark{width:14px;height:14px;background:var(--orange);display:inline-block;border-radius:2px;transform:translateY(2px)}
+  .crest h1{font-size:30px;letter-spacing:-0.01em;margin:0;font-weight:600}
+  .crest .kicker{font-size:10.5px;text-transform:uppercase;letter-spacing:0.22em;color:var(--soft);margin-left:auto}
+  .lede{font-size:17px;line-height:1.55;color:var(--ink);margin:0 0 36px;border-left:3px solid var(--orange);padding:6px 0 6px 18px;max-width:1100px}
+  h2{font-size:22px;margin:52px 0 14px;letter-spacing:-0.005em;font-weight:600}
+  h2 .num{display:inline-block;color:var(--orange);font-weight:600;margin-right:12px}
+  h3{font-size:14px;margin:24px 0 8px;text-transform:uppercase;letter-spacing:0.14em;font-weight:600;color:var(--ink)}
+  h4{font-size:15px;margin:14px 0 4px;font-weight:600}
+  p{margin:8px 0;max-width:1100px}
+  ul,ol{margin:8px 0;padding-left:24px;max-width:1100px}
+  li{margin:4px 0}
+  strong{font-weight:600}
+  code{font:12.5px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--tag);padding:1px 6px;border-radius:3px}
+  hr{border:0;border-top:1px solid var(--line);margin:36px 0}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 13px;text-align:left;vertical-align:top}
+  th{background:var(--tag);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.1em}
+  blockquote{margin:14px 0;padding:14px 20px;background:var(--orange_hi);border-left:3px solid var(--orange);
+    font-style:normal;color:var(--ink);max-width:1100px}
+  blockquote p{margin:0}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+  .grid_3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:14px 0}
+  .card{border:1px solid var(--line);background:#fff;padding:16px 18px;border-radius:4px}
+  .card h4{margin-top:0}
+  .card .meta{font-size:11px;text-transform:uppercase;letter-spacing:0.16em;color:var(--soft);margin:0 0 8px}
+  .pill{display:inline-block;font-size:10.5px;text-transform:uppercase;letter-spacing:0.14em;
+    background:var(--orange);color:#fff;padding:2px 8px;border-radius:2px;vertical-align:middle}
+  .pill.ink{background:var(--ink)}
+  .shot{margin:26px 0;max-width:1100px}
+  .shot img{width:100%;display:block;
+    padding:6px;background:#fff;
+    border:1px solid #a8a092;
+    border-radius:6px;
+    box-shadow:0 10px 28px rgba(13,14,16,0.14), 0 3px 8px rgba(13,14,16,0.10), inset 0 0 0 1px var(--line);
+  }
+  .shot .note{font-size:11.5px;color:var(--soft);font-style:italic;text-align:center;
+    margin:10px 0 0;letter-spacing:0.02em}
+  .shot .fallback{border:1.5px dashed var(--mut);background:#fff;color:var(--soft);padding:40px 18px;
+    text-align:center;font-size:12px;text-transform:uppercase;letter-spacing:0.18em;border-radius:4px}
+  .quote_big{font-size:19px;line-height:1.5;border:none;background:none;padding:20px 0;color:var(--ink);
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:26px 0;max-width:1100px}
+  .quote_big strong{color:var(--orange)}
+  .diag{border:1px solid var(--line);background:#fff;border-radius:4px;overflow:hidden;margin:18px 0}
+  .diag iframe{width:100%;border:0;display:block;min-height:760px}
+  .diag .cap{font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--soft);
+    padding:10px 16px;border-top:1px solid var(--line);background:var(--hi)}
+  .v1_now{background:var(--orange_hi);border-left:3px solid var(--orange);padding:12px 16px;margin:12px 0;font-size:14px;max-width:1100px}
+  .v1_now strong{color:var(--orange);text-transform:uppercase;letter-spacing:0.1em;font-size:11px;display:inline-block;margin-right:8px}
+  .future{background:var(--hi);border-left:3px solid var(--mut);padding:12px 16px;margin:12px 0;font-size:14px;color:var(--soft);max-width:1100px}
+  .future strong{color:var(--ink);text-transform:uppercase;letter-spacing:0.1em;font-size:11px;display:inline-block;margin-right:8px}
+  .toc{border:1px solid var(--line);background:#fff;border-radius:4px;padding:20px 24px;margin:24px 0 38px;max-width:680px}
+  .toc h3{margin:0 0 10px}
+  .toc ol{margin:0;padding-left:22px;font-size:14px}
+  .toc li{margin:3px 0}
+  .toc a{color:var(--ink);text-decoration:none;border-bottom:1px solid transparent}
+  .toc a:hover{border-bottom-color:var(--orange);color:var(--orange)}
+  .footnote{font-size:12.5px;color:var(--soft);margin-top:8px;max-width:1100px}
+  .twoax{display:grid;grid-template-columns:120px 1fr;gap:14px;margin:14px 0;align-items:start;max-width:1100px}
+  .twoax .axis{font-size:10.5px;text-transform:uppercase;letter-spacing:0.18em;color:var(--orange);
+    border-right:1px solid var(--line);padding-right:12px;padding-top:4px;text-align:right}
+  .twoax .vals{font-size:13.5px}
+  .badge_row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;max-width:1100px}
+  .badge{font-size:11.5px;background:var(--tag);padding:3px 10px;border-radius:12px}
+  .badge.orange{background:var(--orange);color:#fff}
+  .badge.ink{background:var(--ink);color:#fff}
+  .surface{border:1px solid var(--line);background:#fff;border-radius:4px;padding:22px 26px;margin:14px 0}
+  .surface .stamp{font-size:10.5px;text-transform:uppercase;letter-spacing:0.18em;color:var(--orange);margin-bottom:4px}
+  .surface h4{margin:0 0 8px;font-size:19px}
+  .surface .role{font-size:12.5px;color:var(--soft);margin-bottom:12px;font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="crest">
+  <span class="mark"></span>
+  <h1>Scapia Market Intelligence</h1>
+  <span class="kicker">Product Handbook · v1</span>
+</div>
+
+<p class="lede">A living view of the markets Scapia operates in. Competitors, regulators, partners, signals. Maintained by an LLM, fed by Scapia, queryable by leaders. Built so the picture stays current without anyone having to remember to update it.</p>
+
+<div class="toc">
+<h3>Contents</h3>
+<ol>
+  <li><a href="#p1">The problem this solves</a></li>
+  <li><a href="#p2">The architecture, an LLM maintained wiki</a></li>
+  <li><a href="#p3">The roles</a></li>
+  <li><a href="#p4">The five types of intelligence</a></li>
+  <li><a href="#p5">How the wiki is organised, two axes</a></li>
+  <li><a href="#p6">How sources enter the system</a></li>
+  <li><a href="#p7">The filter, how the wiki stays clean</a></li>
+  <li><a href="#p8">The surfaces, how leaders meet the wiki</a></li>
+  <li><a href="#p9">Push features, live feed and digest</a></li>
+  <li><a href="#p10">Recent additions</a></li>
+  <li><a href="#p11">The user flows</a></li>
+</ol>
+</div>
+
+<!-- ──────────────────────────────────────────────────────────── -->
+<h2 id="p1"><span class="num">01</span>The problem this solves</h2>
+
+<h3>The situation</h3>
+<p>Competitive and regulatory intelligence at a fast paced organisation tends to be distributed. It lives across people, conversations, and documents. When a leader needs it, they ask around internally, do a quick search, or work off whatever was last remembered. That is not a failure of effort. It is what happens when there is no designated place for intelligence to live.</p>
+
+<h3>The problem</h3>
+<p>Distributed intelligence has four properties that make it dangerous at scale:</p>
+<ol>
+  <li><strong>It does not persist</strong> beyond the person who holds it. When they leave, switch teams, or simply forget, the intelligence leaves with them.</li>
+  <li><strong>It is not shared uniformly.</strong> Different people have different pieces of the picture. No one has the whole picture.</li>
+  <li><strong>It degrades silently.</strong> Yesterday's competitive insight becomes today's stale assumption without anyone noticing.</li>
+  <li><strong>It requires active effort to retrieve every time.</strong> Someone has to go looking, and what they find depends on who they ask and what that person happens to remember.</li>
+</ol>
+<p>The gap this creates is direct. <strong>No single, trustworthy, always current view of competitors. No single source of truth on the regulatory landscape.</strong></p>
+
+<h3>The cost of the gap</h3>
+<ul>
+  <li><strong>Decisions made on stale information.</strong> A strategic call based on a competitor's position from six months ago, not today.</li>
+  <li><strong>Duplicated research effort.</strong> Two people in different teams separately reading the same report, reaching different conclusions, neither knowing the other did it.</li>
+  <li><strong>Regulatory signals that surface too late.</strong> A compliance shift visible in public filings three months before it became a problem, but no one was watching.</li>
+</ul>
+
+<blockquote><p>The typical attempts to fix this, a Confluence wiki, a Notion doc, a Slack channel pinned with links, all fail the same way. They require humans to do the maintenance. Humans get busy. The maintenance stops. The wiki goes stale. Within weeks it is trusted by no one, used by no one, and the org reverts to asking around. This is not a discipline problem. It is structural. Maintenance burden grows faster than value when humans are responsible for keeping it current.</p></blockquote>
+
+<!-- ──────────────────────────────────────────────────────────── -->
+<h2 id="p2"><span class="num">02</span>The architecture, an LLM maintained wiki</h2>
+
+<h3>The core pattern</h3>
+<p>Standard document AI retrieves chunks at query time and re-derives an answer from scratch on every question. Nothing accumulates. <strong>This system works differently.</strong> The LLM reads each source at ingest, extracts the intelligence, and integrates it into a persistent wiki. Knowledge is compiled once and kept current. The 50th source enriches an existing structure rather than adding to a pile.</p>
+
+<p class="footnote"><strong>Note.</strong> The insight that persistent, compounding memory is more valuable than on demand retrieval is not new. Mem0 applies it to conversational AI, giving assistants memory of past user interactions across sessions. This system applies the same insight to a different problem: not remembering what a user said, but building an organisation's collective picture of a market.</p>
+
+<h3>Three layers</h3>
+<div class="grid_3">
+  <div class="card">
+    <p class="meta">Layer 1</p>
+    <h4>Raw sources</h4>
+    <p>Immutable. The LLM reads from these, never modifies them. The audit trail for every claim in the wiki.</p>
+  </div>
+  <div class="card">
+    <p class="meta">Layer 2</p>
+    <h4>The wiki</h4>
+    <p>LLM maintained pages. One page per competitor, regulation, partner, market event. The LLM creates, updates, cross references, and flags contradictions. A human never writes a wiki page directly.</p>
+  </div>
+  <div class="card">
+    <p class="meta">Layer 3</p>
+    <h4>The schema</h4>
+    <p>A configuration the LLM follows. It defines page types, structure, and the exact workflow. This is what makes the LLM a disciplined wiki maintainer rather than a generic assistant.</p>
+  </div>
+</div>
+
+<h3>Three operations</h3>
+<table>
+  <tr><th>Operation</th><th>What happens</th></tr>
+  <tr><td><strong>Ingest</strong></td><td>Source enters. LLM reads it. Runs the filter. Integrates signal into relevant pages. Contradictions flagged immediately.</td></tr>
+  <tr><td><strong>Query</strong></td><td>Leader asks a question. LLM reads relevant pages. Returns a sourced answer with citations traceable to specific pages and raw sources.</td></tr>
+  <tr><td><strong>Lint</strong></td><td>Periodic health check. Scans for contradictions, stale claims, orphan pages, missing cross references, gaps. Detects and flags, never silently fixes.</td></tr>
+</table>
+
+<!-- ──────────────────────────────────────────────────────────── -->
+<h2 id="p3"><span class="num">03</span>The roles</h2>
+
+<p>The system has <strong>three distinct relationships</strong> with humans. Each does one thing and only that thing. That is what keeps the load light.</p>
+
+<table>
+<tr><th>Role</th><th>Who</th><th>What they do</th><th>Time</th></tr>
+<tr><td><strong>Contributor</strong></td><td>The whole org (eventually)</td><td>Submit signals encountered in daily work. Reddit threads, news, internal notes. No research, no curation.</td><td>About 45 seconds per submission</td></tr>
+<tr><td><strong>Curator</strong></td><td>One reviewer</td><td>Approve borderline submissions, resolve flagged contradictions, direct gaps. The system does the bookkeeping. The curator does the thinking.</td><td>30 to 60 minutes per week</td></tr>
+<tr><td><strong>Querier</strong></td><td>Leaders</td><td>Ask questions, act on answers. Never see the ingestion flow or the wiki structure.</td><td>As long as asking a question</td></tr>
+</table>
+
+<div class="v1_now"><strong>v1</strong>Contributor and Curator are <strong>collapsed into a single role</strong>. One trusted person submits sources and also reviews the Layer 2 borderline cases. Org wide contribution is the v2 lever. It switches on when we open the submit surface beyond the curator.</div>
+
+<blockquote><p>The model changes who owns the intelligence. Today it lives with whoever did the research. In this system it lives in the wiki. Contributed by everyone, curated by one, accessible to all.</p></blockquote>
+
+<!-- ──────────────────────────────────────────────────────────── -->
+<h2 id="p4"><span class="num">04</span>The five types of intelligence</h2>
+
+<p>Not all market intelligence is the same shape. A miles devaluation by a competitor is read differently from an RBI circular, which is read differently from a quarterly category growth signal. The system gives each type its own structure so the wiki reflects how the intelligence actually behaves.</p>
+
+<table>
+<tr><th>Type</th><th>What it captures</th><th>Why the treatment is different</th></tr>
+<tr><td><strong>Competitors</strong></td><td>One page per competitor. Axis Atlas, CRED, HDFC Diners Black, IndiGo, MakeMyTrip, OneCard, and others.</td><td>Multi perspective and additive. A competitor lives in both Fintech and Travel. Each new source <em>enriches</em> the page rather than replacing it. Prior context is never overwritten.</td></tr>
+<tr><td><strong>Regulatory</strong></td><td>One page per regulation. RBI circulars, NPCI guidelines, DPDP Rules, co brand card rules, network rules.</td><td>One posture, no perspectives. Indian fintech regulation is interpretive. The system <em>surfaces and routes</em>. It never concludes on interpretation. Conflicts are flagged for legal, never silently resolved.</td></tr>
+<tr><td><strong>Partners</strong></td><td>One page per ecosystem partner. Federal Bank, Visa, Mastercard, RuPay, OTAs, loyalty programs.</td><td>Single perspective, status tracked. Partners are tracked for relationship health (Active, Negotiating, At Risk) and what each side gets out of it.</td></tr>
+<tr><td><strong>Events</strong></td><td>One page per discrete market moment. A launch, a price change, a devaluation, a funding round, a leadership hire, a partnership.</td><td>Time stamped and atomic. An event links back to the entity it happened to. It tells the story over time without bloating the entity page.</td></tr>
+<tr><td><strong>Market signals</strong></td><td>One page per macro trend. Category growth, financial health, regulatory direction.</td><td>Tailwind, headwind, or neutral. Macro context that frames the competitor and regulatory work. What is growing, what is shrinking, what is coming.</td></tr>
+</table>
+
+<p class="footnote">Two additional supporting types round out the schema. <strong>Customer signals</strong> capture voice of customer extracted from App Store reviews, Reddit, and switching threads. <strong>Concepts</strong> are shared mechanics (FX markup, MDR, credit on UPI economics) that are referenced by many pages. Each has its own structure for the same reason: different shapes deserve different treatment.</p>
+
+<!-- ──────────────────────────────────────────────────────────── -->
+<h2 id="p5"><span class="num">05</span>How the wiki is organised, two axes</h2>
+
+<p>Every wiki page sits at the intersection of <strong>two axes</strong>. The first axis is the business domain Scapia operates in. The second axis is the type of intelligence the page captures. A single page can occupy multiple positions on either axis. That is the point.</p>
+
+<h3>Axis 1, Domain</h3>
+<div class="twoax">
+  <div class="axis">Fintech</div>
+  <div class="vals">Credit card product, earn rates, co brand economics, RBI and NPCI policy, DPDP, interchange and MDR, credit on UPI.</div>
+</div>
+<div class="twoax">
+  <div class="axis">Travel</div>
+  <div class="vals">Seven sub verticals: <span class="badge">flights</span> <span class="badge">stays</span> <span class="badge">trains</span> <span class="badge">buses</span> <span class="badge">visas</span> <span class="badge">experiences</span> <span class="badge">store</span></div>
+</div>
+
+<p class="footnote">An entity page can carry both. A miles devaluation by Axis Atlas affects Fintech (card earn rate comparison) and Travel (redemption value). It is tagged accordingly and shows up under both filters.</p>
+
+<h3>Axis 2, Intelligence type</h3>
+<div class="badge_row">
+  <span class="badge orange">Competitor</span>
+  <span class="badge orange">Regulatory</span>
+  <span class="badge orange">Partner</span>
+  <span class="badge orange">Event</span>
+  <span class="badge orange">Market signal</span>
+  <span class="badge ink">Customer signal</span>
+  <span class="badge ink">Concept</span>
+  <span class="badge ink">Comparison</span>
+  <span class="badge ink">Source</span>
+</div>
+
+<h3>Why two axes</h3>
+<p>A purely flat tag system loses the picture. Strict folders force a single "home" per page. Two axes let a leader filter by <em>both</em> at once. "Show me everything that is a <strong>regulatory</strong> page in the <strong>fintech</strong> domain." Or "show me <strong>partner</strong> pages that touch <strong>travel, flights</strong>." The wiki's UI surfaces (Vault, Intel Cards) are built directly on these two axes.</p>
+
+
+<!-- ──────────────────────────────────────────────────────────── -->
+<h2 id="p6"><span class="num">06</span>How sources enter the system</h2>
+
+<div class="v1_now"><strong>v1</strong>Every source enters through one path: the curator manually submits it at the submit page. Paste a URL or markdown, set the source type, hit submit. The filter runs immediately.</div>
+
+<div class="future"><strong>Future scope</strong>Sources start arriving from multiple directions. The curator stays the gatekeeper for borderline calls only, but the volume of raw signal hitting the wiki grows by five to ten times.</div>
+
+<h3>Planned ingestion paths (post v1)</h3>
+<table>
+<tr><th>Path</th><th>How it works</th></tr>
+<tr><td><strong>Automated crawler, tracked sources</strong></td><td>A scheduler runs at a configured interval. Hourly for high priority pages, daily for standard monitoring. For each monitored URL it fetches the current page, diffs it against the stored version, and if content has changed it writes the diff into the system and triggers the filter. The filter treats crawled content the same as a human submission. Same Maker, same Checker, same curator review path. The only difference is upstream: no human was involved in spotting the signal. <em>The wiki grows while the team sleeps.</em></td></tr>
+<tr><td><strong>Daily news email parsing</strong></td><td>The recurring news email Scapia already receives is parsed automatically. Each story becomes a candidate source that runs through the filter. Stories that score below threshold are dropped. The rest enrich the relevant wiki pages.</td></tr>
+<tr><td><strong>Agentic source discovery</strong></td><td>An autonomous agent periodically scouts for new relevant sources. RBI press releases, competitor blog posts, ratings agency reports. It submits them through the same filter. The wiki's gap list informs what the agent looks for.</td></tr>
+</table>
+
+<p class="footnote">All three feed into the same filter and the same curator review path. The investment in the filter pays compounding dividends. Each new ingestion lane is a multiplier on the existing pipeline, not a parallel system.</p>
+
+<!-- ──────────────────────────────────────────────────────────── -->
+<h2 id="p7"><span class="num">07</span>The filter, how the wiki stays clean</h2>
+
+<h3>Why a filter</h3>
+<p>Org wide contribution means <strong>volume</strong>. Volume without a filter means <strong>noise</strong>. Duplicate sources, generic listicles, low signal content reaching the wiki and degrading the intelligence it holds. The filter exists to ensure the wiki only sees what is genuinely new and genuinely useful. Everything else is stopped before it touches a single page.</p>
+
+<h3>The two layers</h3>
+<div class="grid">
+  <div class="card">
+    <p class="meta">Layer 1, automated</p>
+    <h4>Zero human effort</h4>
+    <p>Every submission is scored across three checks. <strong>Relevance:</strong> does this connect to anything the wiki already knows? <strong>Duplication:</strong> does this add anything the wiki does not already know? <strong>Incremental value:</strong> what does this actually contribute? Clear passes and clear rejects are routed instantly. Only the uncertain middle band reaches the next step.</p>
+  </div>
+  <div class="card">
+    <p class="meta">Layer 2, curator review</p>
+    <h4>10 to 30 seconds per item</h4>
+    <p>Submissions that pass Layer 1 but remain uncertain reach the curator as a pre enriched card. Source type, entities mentioned, which wiki pages it would update, both filter scores, and the reason each was given. The curator approves or rejects in one click. They are reviewing the system's assessment, not re reading the source.</p>
+  </div>
+</div>
+
+<h3>The filter architecture</h3>
+<p>No single technique covers the full problem. The filter needs two things: a reliable <em>score</em> and a reliable <em>confidence signal</em>. These are different problems solved by different techniques.</p>
+
+<table>
+<tr><th>Problem</th><th>Technique</th><th>Why</th></tr>
+<tr><td>Producing the score</td><td>LLM as Judge with explicit rubric</td><td>Structured, auditable, improves with better prompting</td></tr>
+<tr><td>Producing the confidence signal</td><td>Maker, Checker</td><td>Disagreement equals uncertainty. It emerges naturally.</td></tr>
+<tr><td>Improving over time</td><td>Curator approvals and rejections become labelled data</td><td>The filter learns from its own mistakes</td></tr>
+<tr><td>Multi pass structure</td><td>Borrowed from auto research patterns</td><td>Relevance, duplication, and quality scored as separate checks, not one blended judgement</td></tr>
+</table>
+
+<h3>How Maker, Checker actually runs</h3>
+<p><strong>Maker</strong> scores the source across the three criteria. Score 8 to 10 means auto approve, Checker skipped. Score 1 to 3 means auto reject, Checker skipped. <strong>Only a Maker score of 4 to 7 triggers the Checker.</strong></p>
+
+<p><strong>Checker</strong> runs the same three checks <em>adversarially</em>. Its prompt explicitly tells it to assume the source is low value and look for reasons to reject. This is deliberate. Two passes of the same model on the same rubric share blind spots and tend to agree. The Checker's value comes from the <em>opposing prompt</em>, not from being a second pair of eyes.</p>
+
+<div class="v1_now"><strong>v1 update</strong>The Checker prompt was rewritten to be properly adversarial (not just "score independently"). The filter now has three explicit routing bands: AUTO APPROVE, AUTO REJECT, and LAYER 2 (curator review). For the highest stakes sources (RBI and NPCI circulars), the curator can override and route directly to Layer 2 regardless of score.</div>
+
+<!-- ──────────────────────────────────────────────────────────── -->
+<h2 id="p8"><span class="num">08</span>The surfaces, how leaders meet the wiki</h2>
+
+<p class="quote_big">A generic chatbot answers any question and is great at none of them. <strong>The three surfaces below exist because leaders at Scapia have specific questions, in a specific shape, recurring on a specific cadence.</strong> Each surface is purpose built around one of those questions. What is the picture. What is the takeaway. What is the answer to the thing in my head right now. None of them would survive as features of a general purpose assistant.</p>
+
+<p>The three surfaces are <strong>not interchangeable</strong>. Each does a job the others cannot.</p>
+
+<!-- Surface 1 -->
+<div class="surface">
+  <p class="stamp">Surface 01</p>
+  <h4>Vault, the wiki, browsable</h4>
+  <p class="role">For when a leader wants the picture, not an answer.</p>
+  <p>Every wiki page rendered as a filterable card grid. Filter by domain (Fintech and Travel and its seven sub categories) and by intelligence type (Competitor, Regulatory, Partner, Event, Market Signal). Click a card and the full page slides in from the right with frontmatter, body, citations, and the Intel section.</p>
+  <p>The Vault answers questions <em>before they are asked</em>. A leader scanning the entities filter sees every competitor at a glance with their current signal: opportunity, watch, threat. That glance produces ten micro decisions. None of them required a chat box.</p>
+  <figure class="shot">
+    <img src="handbook_images/08a_vault_grid.png" alt="Vault grid showing entities with signal chips"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <div class="fallback" style="display:none">[ Awaiting 08a_vault_grid.png ]</div>
+    <p class="note">Note: all content shown is mockup test data, not real.</p>
+  </figure>
+</div>
+
+<!-- Surface 2 -->
+<div class="surface">
+  <p class="stamp">Surface 02</p>
+  <h4>Intel Cards, the takeaway, made structural</h4>
+  <p class="role">For when a leader needs "what does Scapia do about this," not "what does this source say."</p>
+  <p>Every wiki page that has a strategic stake renders as a <strong>structured card</strong> with five tabs: Competitor, Regulatory, Partner, Market Signal, Customer Signal. Each card surfaces the agent's <strong>reasoning</strong>. Where Scapia Wins. Where They Are Ahead. Scapia Implication (verb first actions). Recent Moves. The wiki body is the source. The Intel card is the distillation.</p>
+  <p>This surface exists because raw wiki pages are too dense for a glance. A competitor page is 300 lines of cited prose. The Intel card is the four things the team needs to do about it. The card and the page link to each other. Read the card for the decision. Open the page for the proof.</p>
+  <figure class="shot">
+    <img src="handbook_images/08b_intel_card.png" alt="Intel Card with Scapia Implication and Open Questions"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <div class="fallback" style="display:none">[ Awaiting 08b_intel_card.png ]</div>
+    <p class="note">Note: all content shown is mockup test data, not real.</p>
+  </figure>
+</div>
+
+<!-- Surface 3 -->
+<div class="surface">
+  <p class="stamp">Surface 03</p>
+  <h4>Query, the answer, with citations</h4>
+  <p class="role">For the question already in the leader's head.</p>
+  <p>Plain English question in, <strong>Brief</strong> format answer out. The Brief has a fixed shape. A one sentence Bottom Line. Two or three Signal sections, each citing one wiki page. A Scapia Implication block with verb first bullets. A Confidence line with a because clause. Every claim links back to a wiki page. Every wiki page links back to its raw source. Three clicks from answer to original PDF.</p>
+  <p>Charts render automatically when the answer compares three or more numeric values. Follow up questions in the same thread are treated as elaborations, not new queries (see Section 10).</p>
+  <figure class="shot">
+    <img src="handbook_images/08c_answer_card.png" alt="Intelligence Brief answer with Bottom Line, Signal sections, Confidence"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <div class="fallback" style="display:none">[ Awaiting 08c_answer_card.png ]</div>
+    <p class="note">Note: all content shown is mockup test data, not real.</p>
+  </figure>
+</div>
+
+<h3>Why this is push and pull, not just pull</h3>
+<blockquote><p>The Query surface is <strong>pull</strong>. The leader has to know the question first. The Vault and Intel Cards are <strong>push</strong>. They show the leader what is worth knowing without a question being asked. That is the difference between this and ChatGPT. ChatGPT waits. The Vault and Intel Cards do not.</p></blockquote>
+
+<p>This matters because the most valuable intelligence is the kind a leader did not know to ask about. A regulatory shift that does not yet have a name. A competitor's move that has not been written up anywhere. The Vault and Intel Cards are how the wiki <em>introduces</em> those to the leader.</p>
+
+<!-- ──────────────────────────────────────────────────────────── -->
+<h2 id="p9"><span class="num">09</span>Push features, live feed and digest</h2>
+
+<p>Two features turn the wiki from a destination into something that comes to the user.</p>
+
+<h3>Live feed, "What's New"</h3>
+<p>The homepage carries a feed of every source that has cleared the filter in the last 24 hours, plus the earlier unseen items. Each feed row is a one line headline plus the wiki page it touches. Click and it opens that page in a side panel. Unread state is tracked per user. Orange dots appear on items the leader has not opened yet.</p>
+<figure class="shot">
+  <img src="handbook_images/09_whats_new_feed.png" alt="Homepage Command Center with What's New live feed"
+       onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+  <div class="fallback" style="display:none">[ Awaiting 09_whats_new_feed.png ]</div>
+  <p class="note">Note: all content shown is mockup test data, not real.</p>
+</figure>
+
+<h3>Weekly digest, email</h3>
+<p>A weekly email summarising what the wiki gained that week. New entity pages, regulatory updates, notable market signals, recent events. Sent through a transactional email provider so the digest lands in the leader's inbox without them having to open the app. The leader can pause their digest from the account page.</p>
+
+<div class="v1_now"><strong>v1</strong>Weekly cadence by default. The filter itself decides what is digest worthy. If nothing material happened that week, no email goes out. The system does not train people to ignore email.</div>
+
+<!-- ──────────────────────────────────────────────────────────── -->
+<h2 id="p10"><span class="num">10</span>Recent additions</h2>
+
+<h3>Query directly on the homepage</h3>
+<p>The Intelligence input now lives on the homepage hero, not behind a separate navigation step. A leader types their question into the homepage and Enter takes them straight to the streaming answer view. The friction from "I have a question" to "I have an answer" is one keystroke.</p>
+
+<h3>Query threads are saved</h3>
+<p>Every question and its answer is preserved in a personal thread history. A leader can scroll back to last week's question, re open the answer, and ask a follow up against the same context. Threads are scoped to the leader who asked. Never shared, never written back to the wiki.</p>
+<p>This preserves a clean separation. The wiki is the <em>outside</em> view, what is happening in the market. The threads are the <em>inside</em> view, Scapia's interpretation of it for a specific question. Mixing them would pollute the wiki with half formed takes.</p>
+
+<h3>Intent classifier, making follow ups feel natural</h3>
+<p>Not every message a leader types is a question deserving a full Brief. Before the system spins up the expensive query path, a lightweight classifier reads the message and routes it into one of five intents.</p>
+
+<table>
+<tr><th>Intent</th><th>What it means</th><th>How the system responds</th></tr>
+<tr><td><code>brief_query</code></td><td>A genuine market intelligence question</td><td>Full Brief format answer with citations and (if relevant) a chart</td></tr>
+<tr><td><code>clarification</code></td><td>A follow up to the previous answer. "What about Travel?" "Why does that matter?"</td><td>Elaborates on the previous Brief using the same context. Does not re derive from scratch.</td></tr>
+<tr><td><code>meta</code></td><td>A question about the system itself. "What can you do?" "How does this work?"</td><td>A short canned answer about the system's scope and surfaces</td></tr>
+<tr><td><code>greeting</code></td><td>"hi", "thanks", "good morning"</td><td>A polite one line reply. No LLM cost. No Brief format.</td></tr>
+<tr><td><code>out_of_scope</code></td><td>A question that is not about Scapia, fintech, travel, or the market</td><td>A clear "this isn't what I'm built for" reply with a hint of what is in scope</td></tr>
+</table>
+
+<p><strong>Why this matters for follow ups specifically.</strong> When a leader reads a Brief about Axis Atlas and types "what about HDFC?", the classifier recognises this as a <code>clarification</code> in an active thread, not a fresh standalone query. The system re uses the thread context (the last few turns) rather than starting from zero. The follow up feels conversational because it <em>is</em> conversational. The thread is the memory.</p>
+
+<p>Greetings and out of scope messages get fast, cheap replies. No expensive context assembly. No LLM streaming. Genuine intelligence questions get the full treatment. The classifier protects the cost ceiling without the leader ever noticing the gate.</p>
+
+<!-- ──────────────────────────────────────────────────────────── -->
+<h2 id="p11"><span class="num">11</span>The user flows</h2>
+
+<p>Two end to end flows define how the system actually moves. One for getting intelligence in. One for getting it out.</p>
+
+<h3>Ingest pipeline</h3>
+<p>From a curator pasting a URL, through the filter, into structured wiki pages, with the audit trail preserved at every step.</p>
+<div class="diag">
+  <iframe src="UserFlowDiagrams/Ingest%20Pipeline%20%28standalone%29.html" title="Ingest Pipeline"></iframe>
+  <div class="cap">Ingest pipeline. Curator submission, Maker, Checker filter, page write.</div>
+</div>
+
+<h3>Query pipeline</h3>
+<p>From a leader's plain English question, through intent classification, context assembly, to a streaming Brief.</p>
+<div class="diag">
+  <iframe src="UserFlowDiagrams/Query%20Pipeline%20%28standalone%29.html" title="Query Pipeline"></iframe>
+  <div class="cap">Query pipeline. Intent classification, context assembly, streamed Brief answer.</div>
+</div>
+
+<hr>
+
+<p class="footnote">Product handbook · v1 · maintained alongside the product. New features and surfaces are appended here as they ship. This document is the leadership facing view of what the product <em>is</em> and where it is headed.</p>
+
+</div>
+</body>
+</html>

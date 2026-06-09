@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchPages, fetchFeed } from '../api.js'
+import { useUser, useAuth, canQuery as userCanQuery, canCurate as userCanCurate, isAdmin as userIsAdmin } from '../auth/user.js'
+import { AccessGateToast } from '../components/AccessGate.jsx'
 
 // ── No-scrollbar style ───────────────────────────────────────────────────────
 if (typeof document !== 'undefined' && !document.getElementById('hp-no-scrollbar')) {
@@ -121,6 +123,13 @@ const IconCurator = ({ size = 17 }) => (
   </svg>
 )
 
+const IconAdmin = ({ size = 17 }) => (
+  <svg width={size} height={size} viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
+    <path d="M14 3 L23 7 V13 C23 19 19 23 14 25 C9 23 5 19 5 13 V7 Z" />
+    <polyline points="10,14 13,17 18,11" />
+  </svg>
+)
+
 // ── Live chip ─────────────────────────────────────────────────────────────────
 function LiveChip() {
   return (
@@ -145,6 +154,42 @@ function LiveChip() {
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────
+// Account chip — shows the signed-in user + a sign-out control. Identity comes
+// from the real session (useUser → /api/me); sign-out clears the cookie and
+// drops back to the LoginScreen.
+function AccountChip() {
+  const { user, signOut } = useAuth()
+  const [hover, setHover] = useState(false)
+  if (!user) return null
+  const initial = (user.name || user.email || '?').trim().charAt(0).toUpperCase()
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <span style={{
+        width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        background: MI.d.orange, color: '#fff',
+        fontFamily: MI.d.font, fontSize: 12, fontWeight: 600,
+      }}>{initial}</span>
+      <span style={{
+        fontFamily: MI.d.font, fontSize: 12, color: MI.d.muted,
+        maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+      }} title={user.email}>{user.email}</span>
+      <button
+        onClick={signOut}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          all: 'unset', cursor: 'pointer', fontFamily: MI.d.font, fontSize: 11,
+          fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+          padding: '5px 10px', border: `1px solid ${hover ? MI.d.orange : MI.d.border}`,
+          color: hover ? '#fff' : MI.d.soft, background: hover ? MI.d.orange : 'transparent',
+          transition: 'background .12s, color .12s, border-color .12s',
+        }}
+      >Sign out</button>
+    </div>
+  )
+}
+
 function Header() {
   return (
     <header style={{
@@ -167,12 +212,8 @@ function Header() {
         }}>Market Intel</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <span style={{
-          fontFamily: MI.d.font, fontSize: 10, fontWeight: 600,
-          letterSpacing: '0.22em', color: MI.d.soft,
-          textTransform: 'uppercase',
-        }}>Command Center</span>
         <LiveChip />
+        <AccountChip />
       </div>
     </header>
   )
@@ -210,7 +251,7 @@ function readThreads() {
   } catch { return [] }
 }
 
-function RecentQueriesPreview() {
+function RecentQueriesPreview({ allowQuery = true, onGate }) {
   const navigate = useNavigate()
   const [threads, setThreads] = useState(() => readThreads())
   const [hoverRow, setHoverRow] = useState(null)
@@ -236,8 +277,11 @@ function RecentQueriesPreview() {
   // Hide block entirely when empty — per the locked spec
   if (total === 0) return null
 
-  const openThread = (id) => navigate('/intelligence?thread=' + encodeURIComponent(id))
-  const viewAll = () => navigate('/intelligence')
+  // Past queries are query-gated — opening one lands on the Intelligence page.
+  const openThread = (id) =>
+    allowQuery ? navigate('/intelligence?thread=' + encodeURIComponent(id)) : onGate && onGate('query')
+  const viewAll = () =>
+    allowQuery ? navigate('/intelligence') : onGate && onGate('query')
 
   return (
     <div style={{
@@ -387,12 +431,11 @@ function NavCard({ icon: Icon, name, desc, route }) {
 }
 
 // ── Ops pill + group ──────────────────────────────────────────────────────────
-function OpsPill({ Icon, name, sub, route }) {
+function OpsPill({ Icon, name, sub, onClick }) {
   const [hover, setHover] = useState(false)
-  const navigate = useNavigate()
   return (
     <button
-      onClick={() => navigate(route)}
+      onClick={onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
@@ -435,9 +478,17 @@ function OpsPill({ Icon, name, sub, route }) {
   )
 }
 
-function OpsGroup({ stats }) {
+function OpsGroup({ stats, onGate }) {
+  const navigate = useNavigate()
+  const user = useUser()
   const sourcesSub = `${stats?.sources ?? '…'} · ${stats?.lastIngested ?? '…'}`
   const curatorSub = `${stats?.flags ?? '…'} flags · ${stats?.pending ?? '…'} pending`
+
+  // Curator/Admin pills navigate only if the user holds the capability; else
+  // they raise the matching access gate.
+  const openCurator = () => (userCanCurate(user) ? navigate('/curator') : onGate('curate'))
+  const openAdmin   = () => (userIsAdmin(user)   ? navigate('/admin')   : onGate('admin'))
+
   return (
     <div style={{
       width: '100%', display: 'flex', flexDirection: 'column',
@@ -449,8 +500,9 @@ function OpsGroup({ stats }) {
         color: MI.d.faint,
       }}>Ops</div>
       <div style={{ display: 'flex', gap: 12 }}>
-        <OpsPill Icon={IconSources} name="Sources" sub={sourcesSub} route="/sources" />
-        <OpsPill Icon={IconCurator} name="Curator" sub={curatorSub} route="/curator" />
+        <OpsPill Icon={IconSources} name="Sources" sub={sourcesSub} onClick={() => navigate('/sources')} />
+        <OpsPill Icon={IconCurator} name="Curator" sub={curatorSub} onClick={openCurator} />
+        <OpsPill Icon={IconAdmin}   name="Admin"   sub="Users · access" onClick={openAdmin} />
       </div>
     </div>
   )
@@ -640,7 +692,7 @@ function FeedPanel({ items, feedLoaded, openedPages, onMarkPageOpened, onMarkAll
 
   return (
     <div style={{
-      flex: 3,
+      flex: 1,
       borderLeft: `1px solid ${MI.d.border}`,
       display: 'flex', flexDirection: 'column',
       height: '100%', background: MI.d.bg,
@@ -765,12 +817,15 @@ function BottomBar({ hasUnread, onMarkAllRead, onRefresh }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const navigate                = useNavigate()
+  const user                    = useUser()
+  const allowQuery              = userCanQuery(user)
   const [query, setQuery]           = useState('')
   const [stats, setStats]           = useState(null)
   const [sendHover, setSendHover]   = useState(false)
   const [inputFocused, setInputFocused] = useState(false)
   const [feedItems, setFeedItems]   = useState([])
   const [feedLoaded, setFeedLoaded] = useState(false)
+  const [gate, setGate]             = useState(null)  // null | 'query' | 'curate' | 'admin'
 
   // ── Opened-pages state — shared with VaultPage via localStorage ──────────
   const [openedPages, setOpenedPages] = useState(() => {
@@ -838,11 +893,18 @@ export default function HomePage() {
   }, [])
 
   function handleSend() {
+    if (!allowQuery) { setGate('query'); return }
     if (query.trim()) navigate('/intelligence?q=' + encodeURIComponent(query.trim()))
   }
 
   function handleKeyDown(e) {
     if (e.key === 'Enter') handleSend()
+  }
+
+  // No query access → the input is read-only; focusing or typing raises the gate.
+  function handleInputFocus() {
+    if (!allowQuery) { setGate('query'); return }
+    setInputFocused(true)
   }
 
   return (
@@ -860,8 +922,8 @@ export default function HomePage() {
       {/* ── Body row (left 70% + right 30%) ─────────────────────────────── */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
 
-        {/* ── Left 70% ─────────────────────────────────────────────────── */}
-        <div style={{ flex: 7, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+        {/* ── Left 75% ─────────────────────────────────────────────────── */}
+        <div style={{ flex: 3, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
 
           <main className="hp-no-scroll" style={{ flex: 1, padding: '36px 40px 24px', overflowY: 'auto', backgroundColor: '#212121', ...GRID_BG }}>
 
@@ -906,15 +968,17 @@ export default function HomePage() {
                 <input
                   type="text"
                   value={query}
+                  readOnly={!allowQuery}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  onFocus={() => setInputFocused(true)}
+                  onFocus={handleInputFocus}
                   onBlur={() => setInputFocused(false)}
                   placeholder="Ask about competitors, regulations, market signals…"
                   style={{
                     all: 'unset', flex: 1,
                     fontFamily: MI.d.font, fontSize: 13.5,
                     color: MI.d.text, padding: '9px 0',
+                    cursor: allowQuery ? 'text' : 'pointer',
                   }}
                 />
                 <button
@@ -940,7 +1004,7 @@ export default function HomePage() {
             </div>
 
             {/* Recent queries preview — hidden when empty */}
-            <RecentQueriesPreview />
+            <RecentQueriesPreview allowQuery={allowQuery} onGate={setGate} />
 
             {/* 2-col nav row */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -959,7 +1023,7 @@ export default function HomePage() {
             </div>
 
             {/* Ops pills */}
-            <OpsGroup stats={stats} />
+            <OpsGroup stats={stats} onGate={setGate} />
           </main>
 
           <SystemPulse stats={stats} />
@@ -976,6 +1040,10 @@ export default function HomePage() {
           navigate={navigate}
         />
       </div>
+
+      {/* Access gate — query / curator / admin, raised from input, recent
+          queries, or the OPS pills */}
+      {gate && <AccessGateToast capability={gate} onClose={() => setGate(null)} />}
     </div>
   )
 }

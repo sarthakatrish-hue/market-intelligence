@@ -5,14 +5,22 @@ Run from v1-LLM-wiki/:  python3 server.py
 Vite (port 5173) proxies /api → this server (port 8080).
 """
 
+import base64
+import hashlib
+import hmac
 import http.server
 import json
 import os
 import re
+import secrets
 import sys
+import time
 import traceback
+import urllib.parse
+import urllib.request
 import uuid
 from datetime import date
+from http import cookies as http_cookies
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
@@ -33,6 +41,168 @@ if _env_file.exists():
         _k, _v = _k.strip(), _v.strip().strip('"').strip("'")
         if _k:
             os.environ[_k] = _v   # .env wins over shell — explicit local-dev override
+
+# ── Auth / OAuth config ────────────────────────────────────────────────────
+# Real Google OIDC login (@scapia.cards only) + server-side RBAC. The frontend
+# swap-seam (src/auth/user.js) now reads /api/me instead of localStorage.
+GOOGLE_CLIENT_ID     = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+OAUTH_REDIRECT_URL   = os.environ.get("OAUTH_REDIRECT_URL", "http://localhost:5173/api/auth/callback")
+SESSION_SECRET       = os.environ.get("SESSION_SECRET", "")
+ALLOWED_HD           = os.environ.get("ALLOWED_HD", "scapia.cards")
+DEFAULT_ADMIN_EMAIL  = os.environ.get("DEFAULT_ADMIN_EMAIL", "sarthak.atrish@scapia.cards").lower()
+COOKIE_SECURE        = os.environ.get("COOKIE_SECURE", "0") == "1"
+# Dev escape hatch: skip Google login entirely and treat every request as the
+# default admin. The full OAuth/RBAC stack stays wired — this only short-circuits
+# current_user() when no real session is present. NEVER set this in production.
+AUTH_BYPASS          = os.environ.get("AUTH_BYPASS", "0") == "1"
+AUTH_STORE           = ROOT / "auth_store.json"
+
+SESSION_COOKIE = "mi_session"
+STATE_COOKIE   = "mi_oauth_state"
+SESSION_TTL    = 7 * 24 * 3600          # 7 days
+BASE_ROLE      = "leader"               # every authenticated scapia.cards user
+GRANTABLE      = ("curator", "admin")   # roles an admin can grant on top of leader
+
+GOOGLE_AUTH_URL     = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URL    = "https://oauth2.googleapis.com/token"
+GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
+
+if not SESSION_SECRET:
+    # Ephemeral fallback so dev still works, but sessions die on restart. Warn loudly.
+    SESSION_SECRET = secrets.token_hex(32)
+    print("⚠  SESSION_SECRET not set — using an ephemeral secret. "
+          "Sessions will not survive a server restart. Set SESSION_SECRET in .env.")
+
+
+# ── Auth store (roles + access requests) ───────────────────────────────────
+# Lives OUTSIDE wiki/ — roles must never sit in a world-readable .md. JSON here
+# is the deliberate interim step before Postgres user_roles.
+def load_auth_store():
+    if AUTH_STORE.exists():
+        try:
+            data = json.loads(AUTH_STORE.read_text())
+            if isinstance(data, dict):
+                data.setdefault("roles", {})
+                data.setdefault("access_requests", [])
+                return data
+        except Exception:
+            pass
+    return {"roles": {}, "access_requests": []}
+
+
+def save_auth_store(store):
+    AUTH_STORE.write_text(json.dumps(store, indent=2))
+
+
+def roles_for_email(email):
+    """Base 'leader' + any granted roles + 'admin' for the default admin. Deduped."""
+    email = (email or "").lower()
+    store = load_auth_store()
+    granted = store.get("roles", {}).get(email, [])
+    roles = [BASE_ROLE]
+    for r in granted:
+        if r in GRANTABLE and r not in roles:
+            roles.append(r)
+    if email == DEFAULT_ADMIN_EMAIL and "admin" not in roles:
+        roles.append("admin")
+    return roles
+
+
+# Capability logic — mirrors frontend src/auth/user.js (union across roles).
+def _has(roles, role):       return role in (roles or [])
+def cap_query(roles):        return _has(roles, "admin") or _has(roles, "leader")
+def cap_curate(roles):       return _has(roles, "admin") or _has(roles, "curator")
+def cap_admin(roles):        return _has(roles, "admin")
+
+def has_capability(roles, capability):
+    return {
+        "query":  cap_query(roles),
+        "curate": cap_curate(roles),
+        "admin":  cap_admin(roles),
+        "view":   True,
+    }.get(capability, False)
+
+
+# ── Stateless signed session cookie ────────────────────────────────────────
+def _b64e(b):  return base64.urlsafe_b64encode(b).decode().rstrip("=")
+def _b64d(s):  return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
+
+def make_session(email, name):
+    payload = json.dumps(
+        {"email": email, "name": name, "iat": int(time.time()), "exp": int(time.time()) + SESSION_TTL},
+        separators=(",", ":"),
+    ).encode()
+    body = _b64e(payload)
+    sig  = _b64e(hmac.new(SESSION_SECRET.encode(), body.encode(), hashlib.sha256).digest())
+    return f"{body}.{sig}"
+
+
+def verify_session(token):
+    try:
+        body, sig = token.split(".", 1)
+        expected = _b64e(hmac.new(SESSION_SECRET.encode(), body.encode(), hashlib.sha256).digest())
+        if not hmac.compare_digest(sig, expected):
+            return None
+        data = json.loads(_b64d(body))
+        if int(data.get("exp", 0)) < int(time.time()):
+            return None
+        return data
+    except Exception:
+        return None
+
+
+# ── Google OAuth flow (stdlib urllib, no external deps) ────────────────────
+def google_authorize_url(state):
+    params = {
+        "client_id": GOOGLE_CLIENT_ID,
+        "redirect_uri": OAUTH_REDIRECT_URL,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": state,
+        "hd": ALLOWED_HD,
+        "prompt": "select_account",
+        "access_type": "online",
+    }
+    return GOOGLE_AUTH_URL + "?" + urllib.parse.urlencode(params)
+
+
+def _post_form(url, fields):
+    data = urllib.parse.urlencode(fields).encode()
+    req = urllib.request.Request(url, data=data, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return json.loads(resp.read().decode())
+
+
+def exchange_code(code):
+    """Trade an auth code for tokens. Returns the token dict (incl. access_token)."""
+    return _post_form(GOOGLE_TOKEN_URL, {
+        "code": code,
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": GOOGLE_CLIENT_SECRET,
+        "redirect_uri": OAUTH_REDIRECT_URL,
+        "grant_type": "authorization_code",
+    })
+
+
+def fetch_userinfo(access_token):
+    """Fetch the OIDC userinfo (email, hd, email_verified, name)."""
+    req = urllib.request.Request(
+        GOOGLE_USERINFO_URL, headers={"Authorization": f"Bearer {access_token}"}
+    )
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return json.loads(resp.read().decode())
+
+
+def domain_ok(info):
+    """Workspace gate: verified email AND hd==scapia.cards (fallback: email suffix)."""
+    if not info.get("email_verified", False):
+        return False
+    email = (info.get("email") or "").lower()
+    if info.get("hd", "").lower() == ALLOWED_HD:
+        return True
+    return email.endswith("@" + ALLOWED_HD)
+
 
 # ── Anthropic client (lazy) ────────────────────────────────────────────────
 _client = None
@@ -1169,35 +1339,151 @@ vitals: ["<value>|<label>|<vs-Scapia note>", "<value>|<label>|<vs-Scapia note>",
 
 [^slug]: [Source citation — raw/{source_type}/{filename}]
 
-For REGULATORY sources:
+For REGULATORY sources, create/update a regulatory page:
 ---
 regulation: <Regulation Name>
 type: regulatory
 domains: [fintech]
+travel_categories: []
 page_types: [regulatory]
-effective_date: <date>
-posture: Active
+effective_date: <YYYY-MM-DD>
+posture: <Active|Under Review|Escalated|Superseded>
 last_updated: {today}
 ---
 
-**What it says:** [Direct quote or close paraphrase]
+[Optional 1-2 sentence intro with inline [^slug] citations.]
 
-**Current posture:** [What Scapia is doing today]
+## Regulatory Intel
 
-**Open questions:** [Ambiguities — list format]
+**Status:** <Active|Under Review|Escalated|Superseded>
 
-**Sign-off required:** Federal Bank / Internal Legal / Both
+### What It Requires
+- [Direct paraphrase of the regulation — source-backed]
 
-For EVENT sources:
+### Scapia's Current Posture
+[One paragraph — what Scapia is doing today.]
+
+### Open Questions
+- [Unresolved ambiguity — routes to legal]
+
+### Sign-off Required
+Federal Bank / Internal Legal / Both
+
+### Scapia Implication
+→ [Imperative action — verb-first, specific]
+→ [Imperative action]
+
+[^slug]: [Source citation — raw/{source_type}/{filename}]
+
+For PARTNER sources, create/update a partner page:
+---
+partner: <Partner Name>
+type: partner
+domains: [fintech]
+page_types: [partner]
+last_updated: {today}
+headline: "<one sentence about this partnership, 8-14 words>"
+---
+
+[Optional 1-2 sentence intro with inline [^slug] citations.]
+
+## Partner Intel
+
+**Relationship:** <Co-brand issuer|Distribution partner|Technology partner>
+**Status:** <Active|Negotiating|At Risk>
+
+### What Scapia Gets
+[Paragraph — source-backed.]
+
+### What Partner Gets
+[Paragraph — source-backed.]
+
+### Current Risks
+- [Specific risk]
+
+### Scapia Implication
+→ [Imperative action]
+→ [Imperative action]
+
+[^slug]: [Source citation — raw/{source_type}/{filename}]
+
+For MARKET-SIGNAL sources, create/update a market-signal page:
+---
+title: <Signal Title>
+type: market-signal
+domains: [travel]
+travel_categories: []
+page_types: [market-signal]
+direction: <Tailwind|Headwind|Neutral>
+last_updated: {today}
+headline: "<one sentence about the signal, 8-14 words>"
+---
+
+[Optional 1-2 sentence intro with inline [^slug] citations.]
+
+## Market Intel
+
+**Domain:** <Fintech|Travel> · [sub-category]
+**Direction:** <Tailwind|Headwind|Neutral>
+
+### What's Shifting
+[Paragraph — the signal, source-backed.]
+
+### Why It Matters for Scapia
+[Paragraph — direct line to Scapia's positioning or timing.]
+
+### Scapia Implication
+→ [Imperative action]
+→ [Imperative action]
+
+[^slug]: [Source citation — raw/{source_type}/{filename}]
+
+For EVENT sources, create an event page (links back to the entity):
 ---
 event: <Event Name>
 type: event
 domains: []
+travel_categories: []
 page_types: [event, competitor]
-entity: <slug>
+entity: <entity-slug>
 date: {today}
+headline: "<one sentence — what happened and why it matters for Scapia, 8-14 words>"
 ---
-[Event description with source-backed facts]
+[Event description with source-backed [^slug] facts. Link to [[entities/<entity-slug>]].]
+
+[^slug]: [Source citation — raw/{source_type}/{filename}]
+
+For CUSTOMER-SIGNAL sources (App Store / Reddit / Twitter voice-of-customer),
+create an event page tagged customer:
+---
+event: <Customer Signal Name>
+type: event
+domains: []
+travel_categories: []
+page_types: [customer]
+entity: <entity-slug>
+date: {today}
+headline: "<one sentence — the customer signal and why it matters, 8-14 words>"
+---
+
+[Optional 1-2 sentence intro with inline [^slug] citations.]
+
+## Customer Intel
+
+**Source:** <App Store|Reddit|Twitter|Mixed>
+**Sentiment:** <Positive|Negative|Mixed>
+
+### What They're Saying
+- [Key point — extracted signal, not raw quote]
+
+### Switching Signals
+[Paragraph — who's switching from what and why.]
+
+### Scapia Acquisition Implication
+→ [Imperative action]
+→ [Imperative action]
+
+[^slug]: [Source citation — raw/{source_type}/{filename}]
 
 RESPONSE FORMAT
 Respond in JSON ONLY. No markdown fences. No prose before or after the JSON.
@@ -1222,12 +1508,24 @@ the source describes BOTH a competitor position AND a discrete event,
 or BOTH a regulatory rule AND a competitive signal.
 
 Validation checklist before returning:
-- Frontmatter has no nested YAML (vitals is a JSON array on one line)
-- Section header is exactly "## Competitor Intel" (not "Implications for Scapia")
+- Frontmatter has no nested YAML (vitals/lists are JSON arrays on one line)
+- The page carries its MANDATORY Intel section with the EXACT anchor for its type:
+    competitor    → "## Competitor Intel"
+    regulatory    → "## Regulatory Intel"
+    partner       → "## Partner Intel"
+    market-signal → "## Market Intel"
+    customer      → "## Customer Intel"
+  (An event page that is NOT a customer signal needs no Intel section.)
+- Sub-headings use the EXACT "###" titles shown in the template above
+  (e.g. "### What It Requires", "### Scapia's Current Posture",
+  "### Why It Matters for Scapia"). The frontend parser matches them
+  literally — any drift drops that field from the Intel Card.
+- Scapia Implication bullets start with "→ " (not "- "); win/loss action
+  lines start with "→ Action:".
 - Every factual claim in the body has an inline [^footnote] marker
 - Footnote definitions appear at the bottom of the body, pointing to raw/...
-- vitals has exactly 3 chips, each contrasting against Scapia
-- headline is 8-14 words, one sentence, click-worthy
+- Entity pages: vitals has exactly 3 chips, each contrasting against Scapia
+- headline (entity / event / partner / market-signal) is 8-14 words, one sentence
 """
 
 # ── Filter runner ──────────────────────────────────────────────────────────
@@ -1306,12 +1604,25 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         print(f"  {self.command} {self.path} → {args[1]}")
 
+    # ── CORS ────────────────────────────────────────────────────────────────
+    # Dev is same-origin via the Vite proxy, so CORS is moot there. If the
+    # backend is hit cross-origin we must reflect the Origin (a bare '*' is
+    # illegal alongside credentials) and allow credentials so the cookie rides.
+    def _cors_headers(self):
+        origin = self.headers.get("Origin")
+        if origin:
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Vary", "Origin")
+            self.send_header("Access-Control-Allow-Credentials", "true")
+        else:
+            self.send_header("Access-Control-Allow-Origin", "*")
+
     def send_json(self, data, status=200):
         body = json.dumps(data).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self._cors_headers()
         self.end_headers()
         self.wfile.write(body)
 
@@ -1324,10 +1635,67 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self.send_response(200)
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self._cors_headers()
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
+
+    # ── Cookies / session ─────────────────────────────────────────────────────
+    def _get_cookie(self, name):
+        raw = self.headers.get("Cookie")
+        if not raw:
+            return None
+        try:
+            jar = http_cookies.SimpleCookie(raw)
+            return jar[name].value if name in jar else None
+        except Exception:
+            return None
+
+    def _cookie_attrs(self, max_age):
+        attrs = f"Path=/; HttpOnly; SameSite=Lax; Max-Age={max_age}"
+        if COOKIE_SECURE:
+            attrs += "; Secure"
+        return attrs
+
+    def _set_cookie(self, name, value, max_age=SESSION_TTL):
+        self.send_header("Set-Cookie", f"{name}={value}; {self._cookie_attrs(max_age)}")
+
+    def _clear_cookie(self, name):
+        self.send_header("Set-Cookie", f"{name}=; {self._cookie_attrs(0)}")
+
+    def send_redirect(self, location, cookies=None):
+        self.send_response(302)
+        self.send_header("Location", location)
+        for c in (cookies or []):
+            self.send_header("Set-Cookie", c)
+        self._cors_headers()
+        self.end_headers()
+
+    # ── Identity / capability guards ────────────────────────────────────────
+    def current_user(self):
+        """Return {email, name, roles} from the session cookie, or None."""
+        token = self._get_cookie(SESSION_COOKIE)
+        if not token:
+            if AUTH_BYPASS:
+                return {"email": DEFAULT_ADMIN_EMAIL, "name": "Dev Bypass",
+                        "roles": roles_for_email(DEFAULT_ADMIN_EMAIL)}
+            return None
+        data = verify_session(token)
+        if not data:
+            return None
+        email = data.get("email", "")
+        return {"email": email, "name": data.get("name") or email, "roles": roles_for_email(email)}
+
+    def require(self, capability):
+        """Return the user if it has `capability`, else send 401/403 and return None."""
+        user = self.current_user()
+        if not user:
+            self.send_error_json("Authentication required", 401)
+            return None
+        if not has_capability(user["roles"], capability):
+            self.send_error_json("Forbidden — insufficient role", 403)
+            return None
+        return user
 
     def do_GET(self):
         parsed = urlparse(self.path)
@@ -1374,6 +1742,48 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_json({"items": list_feed_items()})
             return
 
+        # ── Auth ───────────────────────────────────────────────────────────
+        if path == '/api/auth/login':
+            self._handle_login()
+            return
+
+        # Callback path matches the registered redirect URI convention
+        # (market-intelligence.scapia.in/auth/callback) — same path in dev & prod.
+        if path == '/auth/callback':
+            self._handle_callback(qs)
+            return
+
+        if path == '/api/me':
+            user = self.current_user()
+            if not user:
+                self.send_error_json("Not authenticated", 401)
+                return
+            self.send_json(user)
+            return
+
+        if path == '/api/access-requests/mine':
+            user = self.current_user()
+            if not user:
+                self.send_error_json("Authentication required", 401)
+                return
+            store = load_auth_store()
+            mine = [r for r in store.get("access_requests", []) if r.get("email") == user["email"]]
+            self.send_json({"requests": mine})
+            return
+
+        if path == '/api/access-requests':
+            if not self.require("admin"):
+                return
+            store = load_auth_store()
+            self.send_json({"requests": store.get("access_requests", [])})
+            return
+
+        if path == '/api/admin/users':
+            if not self.require("admin"):
+                return
+            self.send_json({"users": self._admin_roster()})
+            return
+
         self.send_error(404, "Not found")
 
     def do_POST(self):
@@ -1385,13 +1795,34 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_error_json("Invalid JSON body", 400)
             return
         try:
-            if path == '/api/query':
+            if path == '/api/auth/logout':
+                self.send_response(200)
+                self._clear_cookie(SESSION_COOKIE)
+                self._cors_headers()
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"ok":true}')
+            elif path == '/api/access-requests':
+                self._handle_access_request(body)
+            elif path == '/api/access-requests/decide':
+                self._handle_access_decide(body)
+            elif path == '/api/admin/roles':
+                self._handle_set_roles(body)
+            elif path == '/api/query':
+                if not self.require("query"):
+                    return
                 self._handle_query(body)
             elif path == '/api/submit':
+                if not self.require("curate"):
+                    return
                 self._handle_submit(body)
             elif path == '/api/queue/approve':
+                if not self.require("curate"):
+                    return
                 self._handle_approve(body)
             elif path == '/api/queue/reject':
+                if not self.require("curate"):
+                    return
                 self._handle_reject(body)
             else:
                 self.send_error_json("Unknown endpoint", 404)
@@ -1400,6 +1831,142 @@ class Handler(http.server.BaseHTTPRequestHandler):
         except Exception as e:
             traceback.print_exc()
             self.send_error_json(str(e), 500)
+
+    # ── Auth handlers ────────────────────────────────────────────────────────
+    def _handle_login(self):
+        if not GOOGLE_CLIENT_ID:
+            self.send_error_json("GOOGLE_CLIENT_ID not configured on the server", 503)
+            return
+        state = secrets.token_urlsafe(24)
+        cookie = f"{STATE_COOKIE}={state}; {self._cookie_attrs(600)}"
+        self.send_redirect(google_authorize_url(state), cookies=[cookie])
+
+    def _handle_callback(self, qs):
+        # CSRF: state param must match the state cookie we set at /login.
+        state_param  = qs.get("state", [""])[0]
+        state_cookie = self._get_cookie(STATE_COOKIE)
+        if not state_param or state_param != state_cookie:
+            self.send_redirect("/?auth_error=state")
+            return
+        code = qs.get("code", [""])[0]
+        if not code:
+            self.send_redirect("/?auth_error=nocode")
+            return
+        try:
+            tokens = exchange_code(code)
+            info   = fetch_userinfo(tokens["access_token"])
+        except Exception as e:
+            print(f"  OAuth callback error: {e}")
+            self.send_redirect("/?auth_error=exchange")
+            return
+        if not domain_ok(info):
+            # Wrong domain / unverified — clear the state cookie and bounce.
+            self.send_redirect("/?auth_error=domain", cookies=[f"{STATE_COOKIE}=; {self._cookie_attrs(0)}"])
+            return
+        email = (info.get("email") or "").lower()
+        name  = info.get("name") or email
+        session = make_session(email, name)
+        self.send_redirect("/", cookies=[
+            f"{SESSION_COOKIE}={session}; {self._cookie_attrs(SESSION_TTL)}",
+            f"{STATE_COOKIE}=; {self._cookie_attrs(0)}",
+        ])
+
+    # ── Access-request + role handlers ─────────────────────────────────────
+    def _handle_access_request(self, body):
+        user = self.current_user()
+        if not user:
+            self.send_error_json("Authentication required", 401)
+            return
+        requested_role = (body.get("requested_role") or "").strip()
+        if requested_role not in GRANTABLE:
+            self.send_error_json("requested_role must be 'curator' or 'admin'", 400)
+            return
+        reason = (body.get("reason") or "").strip()
+        store = load_auth_store()
+        reqs  = store.setdefault("access_requests", [])
+        existing = next(
+            (r for r in reqs if r.get("email") == user["email"]
+             and r.get("requested_role") == requested_role and r.get("status") == "pending"),
+            None,
+        )
+        ts = int(time.time() * 1000)
+        if existing:
+            existing["ts"] = ts
+            if reason:
+                existing["reason"] = reason
+            req = existing
+        else:
+            req = {
+                "id": f"req_{ts}_{secrets.randbelow(100000)}",
+                "name": user["name"], "email": user["email"],
+                "requested_role": requested_role, "reason": reason,
+                "status": "pending", "ts": ts,
+            }
+            reqs.insert(0, req)
+        save_auth_store(store)
+        self.send_json(req)
+
+    def _handle_access_decide(self, body):
+        if not self.require("admin"):
+            return
+        req_id   = body.get("id")
+        decision = body.get("decision")
+        if decision not in ("granted", "denied"):
+            self.send_error_json("decision must be 'granted' or 'denied'", 400)
+            return
+        store = load_auth_store()
+        req = next((r for r in store.get("access_requests", []) if r.get("id") == req_id), None)
+        if not req:
+            self.send_error_json("Request not found", 404)
+            return
+        req["status"] = decision
+        if decision == "granted" and req["requested_role"] in GRANTABLE:
+            grants = store.setdefault("roles", {}).setdefault(req["email"], [])
+            if req["requested_role"] not in grants:
+                grants.append(req["requested_role"])
+        save_auth_store(store)
+        self.send_json({"ok": True, "request": req})
+
+    def _handle_set_roles(self, body):
+        if not self.require("admin"):
+            return
+        email = (body.get("email") or "").strip().lower()
+        roles = body.get("roles")
+        if not email or not isinstance(roles, list):
+            self.send_error_json("email and roles[] required", 400)
+            return
+        grants = [r for r in roles if r in GRANTABLE]   # 'leader' is implicit, never stored
+        store = load_auth_store()
+        if grants:
+            store.setdefault("roles", {})[email] = grants
+        else:
+            store.setdefault("roles", {}).pop(email, None)
+        save_auth_store(store)
+        self.send_json({"ok": True, "email": email, "roles": roles_for_email(email)})
+
+    def _admin_roster(self):
+        """Roster = default admin + everyone with a grant + everyone who filed a request."""
+        store = load_auth_store()
+        emails = {DEFAULT_ADMIN_EMAIL}
+        names  = {}
+        emails.update(store.get("roles", {}).keys())
+        for r in store.get("access_requests", []):
+            if r.get("email"):
+                emails.add(r["email"])
+                names.setdefault(r["email"], r.get("name"))
+        me = self.current_user()
+        if me:
+            emails.add(me["email"])
+            names.setdefault(me["email"], me["name"])
+        roster = []
+        for e in sorted(emails):
+            roster.append({
+                "email": e,
+                "name": names.get(e) or e,
+                "roles": roles_for_email(e),
+                "is_default_admin": e == DEFAULT_ADMIN_EMAIL,
+            })
+        return roster
 
     # ── /api/query ─────────────────────────────────────────────────────────
     # Two-phase router:
@@ -1740,6 +2307,8 @@ if __name__ == "__main__":
     print(f"  API:      http://localhost:{port}")
     print(f"  Wiki:     {WIKI}")
     print(f"  API key:  {'✓ set' if key_set else '✗ NOT SET — /api/query and filter will return 503'}")
+    if AUTH_BYPASS:
+        print(f"  Auth:     ⚠ BYPASS ON — every request is {DEFAULT_ADMIN_EMAIL} (admin). DEV ONLY.")
     if not key_set:
         print(f"\n  To enable live queries:")
         print(f"    export ANTHROPIC_API_KEY=sk-ant-…")

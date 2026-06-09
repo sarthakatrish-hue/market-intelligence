@@ -649,7 +649,7 @@ Before running this workflow on any new source, **discuss first** (step 2 below)
 
 6. **Write or update `## Competitor Intel`.** For every entity page written or updated: write or re-evaluate the Competitor Intel section. This step is not optional — a page cannot be filed without it. Must answer: what decision does this inform? Where does Scapia win? Where is the competitor genuinely ahead? What should Scapia do? Follow the exact section format and parse anchors above.
 
-7. **Write or update regulatory pages.** For regulatory sources: find or create the regulatory page. Write using the posture model (What it says / Current posture / Open questions / Sign-off required). If the source conflicts with existing regulatory content on fact (not interpretation), mark status = `Escalated` and flag for curator — never silently resolve. Never conclude on RBI/NPCI interpretation — surface and route only.
+7. **Write or update regulatory pages.** For regulatory sources: find or create the regulatory page. Write the mandatory `## Regulatory Intel` section using the posture model — `**Status:**` plus `### What It Requires`, `### Scapia's Current Posture`, `### Open Questions`, `### Sign-off Required`, and `### Scapia Implication` (exact anchors from the [Regulatory pages](#regulatory-pages--wikiregulatoryslugmd) schema). If the source conflicts with existing regulatory content on fact (not interpretation), mark status = `Escalated` and flag for curator — never silently resolve. Never conclude on RBI/NPCI interpretation — surface and route only.
 
 8. **Create an event page** if the source describes a discrete market event (launch, pricing change, devaluation, funding, hire, partnership). Link back to the relevant entity page.
 
@@ -778,7 +778,7 @@ When the human asks for a health check:
 - Flag competitor entity pages missing perspective sections that existing sources should populate.
 - Flag known Scapia competitors with no entity page — report as a gap.
 - Flag regulatory pages with status = `Escalated` — list explicitly.
-- Flag regulatory pages missing any of the four mandatory body fields (What it says / Current posture / Open questions / Sign-off required).
+- Flag regulatory pages missing the `## Regulatory Intel` section or any of its mandatory anchors (`### What It Requires` / `### Scapia's Current Posture` / `### Open Questions` / `### Sign-off Required` / `### Scapia Implication`).
 - Flag entity pages missing the `## Competitor Intel` section.
 - Flag entity pages with ⚠ Unsourced markers that have been open more than 2 ingests.
 - Flag ⚠ Conflict markers that have not been curator-resolved.

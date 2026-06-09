@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Scapia Market Intelligence — Architecture Brief</title>
+<style>
+  :root{
+    --ink:#0d0e10; --paper:#fbfaf7; --line:#dcd6cb;
+    --orange:#ce3e00; --soft:rgba(13,14,16,0.55); --mut:rgba(13,14,16,0.35);
+    --hi:#fff4ec; --tag:#ecebe7;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
+    font:14px/1.5 "Lexend Deca",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+  .wrap{max-width:980px;margin:0 auto;padding:36px 28px 80px}
+  h1{font-size:26px;margin:0 0 4px;letter-spacing:-0.01em}
+  h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px;letter-spacing:-0.005em}
+  h3{font-size:14px;margin:14px 0 6px;color:var(--ink);text-transform:uppercase;letter-spacing:0.08em}
+  h4{font-size:13px;margin:10px 0 4px;color:var(--ink)}
+  p{margin:6px 0}
+  ul,ol{margin:6px 0;padding-left:20px}
+  li{margin:2px 0}
+  code{font:12px/1.4 ui-monospace,"SF Mono",Menlo,monospace;background:var(--tag);padding:1px 5px;border-radius:3px}
+  .sub{color:var(--soft);font-size:12px;margin:0 0 16px}
+  .tag{display:inline-block;font-size:10px;text-transform:uppercase;letter-spacing:0.14em;background:var(--orange);color:#fff;padding:2px 6px;border-radius:2px;vertical-align:middle;margin-right:6px}
+  .tag.alt{background:var(--ink)}
+  .tag.mut{background:var(--mut);color:#fff}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:10px 0}
+  .card{border:1px solid var(--line);background:#fff;padding:12px 14px;border-radius:4px}
+  .card h4{margin-top:0;font-size:11px;text-transform:uppercase;letter-spacing:0.16em;color:var(--soft)}
+  .card.have{border-left:3px solid var(--ink)}
+  .card.need{border-left:3px solid var(--orange);background:var(--hi)}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
+  th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+  th{background:var(--tag);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.1em}
+  td code{font-size:11px}
+  .diag{font:11.5px/1.55 ui-monospace,"SF Mono",Menlo,monospace;background:#fff;border:1px solid var(--line);
+    padding:14px;border-radius:4px;white-space:pre;overflow-x:auto;margin:8px 0;color:var(--ink)}
+  .pill{display:inline-block;font-size:10px;background:var(--tag);padding:1px 6px;border-radius:10px;margin-right:4px}
+  .pill.orange{background:var(--orange);color:#fff}
+  .pill.ink{background:var(--ink);color:#fff}
+  hr{border:0;border-top:1px solid var(--line);margin:24px 0}
+  .lede{background:var(--ink);color:#fff;padding:14px 18px;border-radius:4px;margin:0 0 24px}
+  .lede p{margin:0;color:#fff}
+  .lede strong{color:var(--orange)}
+  .small{font-size:12px;color:var(--soft)}
+  .two-col-list{column-count:2;column-gap:24px;margin:4px 0}
+  .two-col-list li{break-inside:avoid}
+  .schema{border:1px solid var(--line);background:#fff;border-radius:4px;padding:10px 14px;margin:6px 0}
+  .schema h4{margin:0 0 4px;font-size:12px;text-transform:none;letter-spacing:0}
+  .schema h4 code{background:var(--ink);color:#fff;padding:1px 6px;font-size:11px}
+  .schema p{margin:2px 0;font-size:12.5px;color:var(--soft)}
+  .col{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}
+  .ok{color:#16A34A;font-weight:600}
+  .miss{color:var(--orange);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Scapia Market Intelligence — Architecture Brief</h1>
+<p class="sub">What we have built · what we need to host it</p>
+
+<div class="lede">
+<p><strong>Scapia Market Intelligence</strong> is an LLM-maintained wiki tracking competitors, regulators, market signals, and partners. Curators feed raw sources; an LLM filter scores them; approved sources are written as structured wiki pages by Claude. Leaders ask plain-English questions and get a sourced "Brief" answer. The wiki is maintained by the LLM — not by humans.</p>
+</div>
+
+<h2><span class="tag">1</span> Frontend</h2>
+
+<div class="grid">
+  <div class="card have">
+    <h4>What we have</h4>
+    <ul>
+      <li>React + Vite single-page app (<code>frontend-react/</code>)</li>
+      <li>9 routes — 5 leader surfaces, 4 curator/legacy</li>
+      <li>Production build = static files in <code>dist/</code> (~228 KB initial load gzipped)</li>
+      <li>Lazy-loaded curator + heavy leader chunks</li>
+      <li>Wired to read backend URL from environment variable</li>
+    </ul>
+  </div>
+  <div class="card need">
+    <h4>What we need</h4>
+    <ul>
+      <li>Static file hosting reachable by users (with HTTPS + a domain)</li>
+      <li>SPA routing — any unknown path falls through to <code>index.html</code> (config file provided)</li>
+      <li>CDN-style caching for fingerprinted <code>/assets/*</code>; <code>index.html</code> stays uncached so deploys take effect immediately</li>
+      <li>Build pipeline that runs <code>npm run build</code> on push and publishes <code>dist/</code></li>
+      <li>Environment variable injected at build: <code>VITE_API_URL</code> pointing at the backend</li>
+    </ul>
+  </div>
+</div>
+
+<div class="diag">User Browser
+   │  HTTPS
+   ▼
+Static host  ──  serves  ──  index.html + /assets/* (fingerprinted, long-cache)
+   │
+   │  fetch /api/*  ───►  Backend (Section 2)</div>
+
+<h2><span class="tag">2</span> Backend</h2>
+
+<h3>2.a · Auth &amp; Roles</h3>
+
+<div class="grid">
+  <div class="card have">
+    <h4>What we have</h4>
+    <ul>
+      <li><strong>No auth screen, no login, no users.</strong> The app runs on localhost — anyone with the dev URL has full access.</li>
+      <li>No role separation in code; the curator surfaces (<code>/curator</code>, <code>/submit</code>) are reachable by typing the URL.</li>
+      <li>No JWT, no session, no email flow.</li>
+    </ul>
+  </div>
+  <div class="card need">
+    <h4>What we need</h4>
+    <ul>
+      <li>Login screen — <strong>Sign in with Google</strong>, restricted to the <code>@scapia.cards</code> hosted domain (<code>hd</code> claim verified server-side; any other domain is rejected)</li>
+      <li>The backend runs the OAuth code exchange itself and issues its own session JWT (httpOnly cookie) — no third-party auth vendor</li>
+      <li><strong>Three additive roles</strong> — a user may hold more than one; capabilities are the union:
+        <br><strong>viewer</strong> (default, no role) = read Vault / Intel Cards / wiki / raw sources ·
+        <strong>leader</strong> = + ask questions (query) ·
+        <strong>curator</strong> = + submit &amp; review (curator workspace) ·
+        <strong>admin</strong> = superuser + the Admin page (assigns roles)</li>
+      <li>Roles stored server-side (<code>user_roles</code>) and checked on every backend request — frontend gating is convenience only</li>
+      <li><strong>Gated routes return 403:</strong> query endpoints for non-leaders, <code>/submit</code> + <code>/curator/*</code> for non-curators, <code>/admin/*</code> for non-admins</li>
+      <li><strong>Admin page + access-request flow:</strong> a viewer hits a gate → clicks "Request access" → writes an <code>access_requests</code> row → flagged in the Admin page → admin grants/denies the role. Default admin seeded at deploy: <code>sarthak.atrish@scapia.cards</code></li>
+      <li>A separate header-based secret (<code>X-Internal-Secret</code>) for cron-triggered endpoints — not exposed to users</li>
+    </ul>
+  </div>
+</div>
+
+<div class="diag">User
+ │ click "Sign in with Google"   ┌────────────────┐
+ ├──────────────────────────────►│  Google OIDC   │  ──►  consent + redirect w/ code
+ │                               └────────┬───────┘
+ │                                        │  code
+ ▼                                        ▼
+Browser  ◄── session JWT (httpOnly) ── Backend ── exchange code, verify hd=@scapia.cards
+ │                                        │  upsert users row, look up user_roles
+ │  every request: Cookie: session=&lt;JWT&gt;  │
+ ▼                                        ▼
+Backend  ── verify JWT ──► union of roles ──► capability check ──► allow / 403
+                                                     │ no capability
+                                                     ▼
+                                          viewer → "Request access" → access_requests (pending)
+                                                     ▼
+                                          Admin page grants role ──► user_roles row added</div>
+
+<h4>RBAC framework — what's already built (frontend, behind a swap-seam)</h4>
+
+<p class="small">The split that matters: <strong>authorization (RBAC) is 100% ours and already built</strong>; <strong>authentication (Google login) is also ours to code</strong> but needs an externally-provided Google OAuth client. The whole RBAC layer — capability model, route guards, in-app gates, the access-request loop, and the Admin page — runs in the app today behind a deliberate <strong>pre-auth stub</strong>. It models the exact <code>{ name, email, roles[] }</code> object the backend will hand the frontend after Google login, so wiring real auth changes <em>one file</em> and no consumers.</p>
+
+<div class="grid">
+  <div class="card">
+    <h4>Capability model — one source of truth</h4>
+    <ul>
+      <li>Lives in <code>src/auth/user.js</code>. Roles are <strong>additive</strong>; capabilities are the union across a user's roles.</li>
+      <li>Helpers every surface calls: <code>canQuery</code> (leader|admin) · <code>canCurate</code> (curator|admin) · <code>isAdmin</code> · generic <code>hasCapability(user, cap)</code>.</li>
+      <li>No role = baseline <strong>viewer</strong> (read-only). Admin is superuser.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Two enforcement points in the UI</h4>
+    <ul>
+      <li><strong>Route guard</strong> — <code>RequireCapability</code> wraps <code>/intelligence</code> (query), <code>/curator</code> + <code>/submit</code> (curate), <code>/admin</code> (admin); a deep-link without the capability renders a full-page access card.</li>
+      <li><strong>Inline gates</strong> — <code>AccessGateToast</code> on in-page actions: the query input, past queries, and the OPS Curator / Admin pills.</li>
+    </ul>
+  </div>
+</div>
+
+<p class="small" style="margin-top:10px"><strong>Access-request loop (built, end-to-end):</strong> a user without a capability hits a gate → <em>Request access</em> → writes a request row (today client-side <code>mi_access_requests</code>; the backend's <code>access_requests</code> table on production) → the <strong>Admin page</strong> shows it in a live pending queue → admin <em>grants</em> (adds the role) or <em>denies</em>. The Admin page carries its own dark sidebar and derives its user roster from <strong>real state only</strong> — the signed-in user plus anyone who actually filed a request — with no seeded/sample rows.</p>
+
+<p class="small"><strong>The swap-seam:</strong> only <code>src/auth/user.js</code> changes when real auth lands — its <code>getUser()</code> reads the session (the <code>/api/me</code> response / session JWT) instead of localStorage. Gates, the Admin page, the Sidebar and the route guards are untouched because they all go through <code>useUser()</code> and the capability helpers. Frontend gating stays <strong>convenience only</strong>: the backend re-checks roles on every request and returns <code>403</code> regardless of what the UI shows.</p>
+
+<h3>2.b · Agent layer (Ingest + Query)</h3>
+
+<div class="grid">
+  <div class="card have">
+    <h4>What we have</h4>
+    <ul>
+      <li>Single Python file <code>server.py</code> (~1,400 lines) using stdlib <code>http.server</code> — fine locally, not production-grade</li>
+      <li>Filesystem reads/writes for wiki + raw + state</li>
+      <li>10 HTTP endpoints (table below)</li>
+      <li>5 LLM-driven roles in the pipeline (Haiku for filters/classifier, Sonnet for writers)</li>
+      <li>Synchronous: a submit blocks ~30–60s while the agent runs</li>
+    </ul>
+  </div>
+  <div class="card need">
+    <h4>What we need</h4>
+    <ul>
+      <li><strong>FastAPI rewrite</strong> — async event loop (needed for streaming answers), input validation, OpenAPI docs, middleware for auth and CORS, graceful shutdown</li>
+      <li>Migration to <strong>Claude Agent SDK</strong> — proper tool-use loop, retries, structured tool errors</li>
+      <li>Background-task runner for ingest (submit returns immediately; the agent runs async)</li>
+      <li>Server-sent events (SSE) streaming for query answers (first token under 1s)</li>
+      <li>Restart recovery — on boot, mark any jobs left <code>running</code> as <code>failed</code></li>
+    </ul>
+  </div>
+</div>
+
+<h4>Current API endpoints (in <code>server.py</code>)</h4>
+<table>
+<tr><th>Method</th><th>Path</th><th>Purpose</th><th>Used by</th></tr>
+<tr><td>GET</td><td><code>/api/pages</code></td><td>List wiki pages with frontmatter</td><td>Vault, Intel Cards</td></tr>
+<tr><td>GET</td><td><code>/api/page?path=…</code></td><td>Single page body + meta</td><td>Page panel</td></tr>
+<tr><td>GET</td><td><code>/api/feed</code></td><td>Source-summary feed items (time-ordered)</td><td>Homepage "What's New"</td></tr>
+<tr><td>GET</td><td><code>/api/raw</code> / <code>/api/raw/content</code></td><td>List + read raw source files</td><td>Curator view</td></tr>
+<tr><td>GET</td><td><code>/api/state</code></td><td>Pending queue, rejections, health counts</td><td>Curator page</td></tr>
+<tr><td>POST</td><td><code>/api/query</code></td><td>Ask question, get Brief answer (blocking)</td><td>Intelligence page</td></tr>
+<tr><td>POST</td><td><code>/api/submit</code></td><td>Submit raw source → filter → maybe ingest</td><td>Submit form</td></tr>
+<tr><td>POST</td><td><code>/api/queue/approve</code></td><td>Curator approves a Layer-2 borderline card</td><td>Curator page</td></tr>
+<tr><td>POST</td><td><code>/api/queue/reject</code></td><td>Curator rejects + deletes raw file</td><td>Curator page</td></tr>
+</table>
+
+<h4>Additional endpoints we will need</h4>
+<table>
+<tr><th>Method</th><th>Path</th><th>Purpose</th></tr>
+<tr><td>GET</td><td><code>/api/me</code></td><td>Current user, role, today's usage counts</td></tr>
+<tr><td>GET</td><td><code>/api/jobs</code></td><td>Async ingest jobs list (curator)</td></tr>
+<tr><td>GET</td><td><code>/api/jobs/{id}</code></td><td>Single job with full agent trace</td></tr>
+<tr><td>POST</td><td><code>/api/layer2/{id}/decide</code></td><td>Curator resolves a borderline card</td></tr>
+<tr><td>GET</td><td><code>/api/ingest-log</code></td><td>Append-only operation log</td></tr>
+<tr><td>POST</td><td><code>/internal/send-digest</code></td><td>Daily digest email (scheduled)</td></tr>
+<tr><td>POST</td><td><code>/internal/snapshot</code></td><td>Nightly DB → markdown export (scheduled)</td></tr>
+<tr><td>POST</td><td><code>/internal/keepalive</code></td><td>Health ping (scheduled)</td></tr>
+</table>
+
+<h4>LLM roles in the pipeline</h4>
+<table>
+<tr><th>Role</th><th>Model</th><th>Where it runs</th><th>Purpose</th></tr>
+<tr><td>Intent Classifier</td><td>Haiku</td><td>Every <code>/api/query</code></td><td>Routes question to <code>brief_query</code> / <code>clarification</code> / <code>out_of_scope</code> / <code>meta</code> / <code>greeting</code> — saves LLM cost on small talk</td></tr>
+<tr><td>Maker (filter)</td><td>Haiku</td><td>Every <code>/api/submit</code></td><td>Scores 1–10 across relevance · duplication · incremental value</td></tr>
+<tr><td>Checker (adversarial filter)</td><td>Haiku</td><td>Only if Maker scored 4–7</td><td>Adversarial second-pass; tries to <em>refute</em> the source</td></tr>
+<tr><td>Ingest Writer</td><td>Sonnet</td><td>When filter approves</td><td>Writes / updates structured wiki pages, follows the strict <code>CLAUDE.md</code> schema</td></tr>
+<tr><td>Query Responder</td><td>Sonnet</td><td>When intent = <code>brief_query</code></td><td>Composes the Brief-format answer with inline citations; streams via SSE</td></tr>
+</table>
+
+<h4>Tools the agent will call (when migrated to the Agent SDK)</h4>
+<table>
+<tr><th>Tool</th><th>Purpose</th></tr>
+<tr><td><code>read_raw(path)</code></td><td>Read a raw source from object storage</td></tr>
+<tr><td><code>list_pages(folder?, type?)</code></td><td>List wiki pages with summary fields</td></tr>
+<tr><td><code>read_page(path)</code></td><td>Read a wiki page's body + frontmatter</td></tr>
+<tr><td><code>write_page(path, frontmatter, body)</code></td><td>Validate, parse, upsert (hard contract — rejects if mandatory section missing)</td></tr>
+<tr><td><code>upload_raw(path, content)</code></td><td>Capture verbal context as a raw source</td></tr>
+<tr><td><code>append_log(operation, description)</code></td><td>Add an entry to the append-only log</td></tr>
+<tr><td><code>mark_layer2(...)</code></td><td>Halt workflow, surface a borderline review card</td></tr>
+</table>
+
+<h4>Ingest flow</h4>
+<div class="diag">Curator UI ── POST /api/submit ──► Backend
+                                      │
+                                      ▼
+                       save raw file to object storage
+                                      │
+                                      ▼
+                              Maker (Haiku scores 1–10)
+                                      │
+                  ┌───────────────────┼───────────────────┐
+                  ▼                   ▼                   ▼
+                8–10               4–7                  1–3
+            AUTO-APPROVE        BORDERLINE          AUTO-REJECT
+                  │                   │                   │
+                  │                   ▼                   ▼
+                  │           Checker (adversarial)    log + stop
+                  │                   │
+                  │      ┌────────────┼────────────┐
+                  │      ▼            ▼            ▼
+                  │   8–10         4–7 ±1–2     4–7 diverge 3+
+                  │  APPROVE      LAYER 2       LAYER 2
+                  │      │            │            │
+                  ▼      ▼            ▼            ▼
+                  │              curator decides via /api/layer2/{id}/decide
+                  │
+                  ▼
+       Ingest Writer (Sonnet) — calls write_page / append_log
+                  │
+                  ▼
+       pages persisted · source summary written · log appended · job marked completed</div>
+
+<h4>Query flow</h4>
+<div class="diag">Leader UI ── POST /api/query {question, thread_history} ──► Backend
+                                                                    │
+                                                                    ▼
+                                                  Intent Classifier (Haiku)
+                                                                    │
+                              ┌─────────────┬─────────────┬─────────┴────┐
+                              ▼             ▼             ▼              ▼
+                         greeting       meta /         out_of_scope    brief_query
+                         (canned)      clarification  (canned)             │
+                                                                           ▼
+                                                   assemble wiki context (read pages)
+                                                                           │
+                                                                           ▼
+                                                   Query Responder (Sonnet, streaming)
+                                                                           │
+                                                                           ▼
+                                              SSE stream tokens → browser AnswerCard
+                                                                           │
+                                                                           ▼
+                                              log turn (tokens · cost · pages_read)</div>
+
+<h4>Cost &amp; rate guardrails (every LLM call goes through them)</h4>
+<table>
+<tr><th>#</th><th>Layer</th><th>Where</th><th>What it blocks</th></tr>
+<tr><td>1</td><td>Circuit breaker</td><td>In-memory, per backend container</td><td>Halts all LLM calls if upstream errors spike (5 errors / 60s)</td></tr>
+<tr><td>2</td><td>Per-minute rate limit</td><td>Per user</td><td>Throttles burst submissions</td></tr>
+<tr><td>3</td><td>Concurrent ingest semaphore</td><td>DB count check</td><td>Caps simultaneous agent loops (queues the rest)</td></tr>
+<tr><td>4</td><td>Per-user daily caps</td><td>SUM over today</td><td>Queries · input tokens · output tokens</td></tr>
+<tr><td>5</td><td>Cost velocity tripwire</td><td>SUM over last hour</td><td>Catches runaway loops</td></tr>
+<tr><td>6</td><td>Monthly hard kill</td><td>SUM over month</td><td>Absolute budget ceiling</td></tr>
+<tr><td>7</td><td>Per-ingest token cap</td><td>Between agent iterations</td><td>Stops one job hogging the daily envelope</td></tr>
+<tr><td>8</td><td>Iteration ceiling + stuck-loop detect</td><td>Between agent iterations</td><td>30 iterations max; same-tool-same-args ×3 = abort</td></tr>
+</table>
+
+<h3>2.c · Storage &amp; Database</h3>
+
+<h4>What we have today — filesystem</h4>
+
+<div class="diag">v1-LLM-wiki/
+├── wiki/                ← LLM-written knowledge base (markdown files)
+│   ├── index.md         ← master catalog of all pages (LLM maintains)
+│   ├── log.md           ← append-only event log (LLM maintains)
+│   ├── scapia.md        ← reference baseline about Scapia itself
+│   ├── entities/        ← one file per competitor (Axis Atlas, CRED, HDFC…)
+│   ├── partners/        ← Federal Bank, Visa/MC/RuPay, OTAs
+│   ├── regulatory/      ← RBI circulars, DPDP, NPCI rules
+│   ├── events/          ← discrete market moments (launches, devaluations)
+│   ├── market-signals/  ← macro trends
+│   ├── concepts/        ← shared mechanics (FX markup, MDR…)
+│   ├── comparisons/     ← head-to-head, on demand
+│   └── sources/         ← one summary file per ingested source
+│
+├── raw/                 ← immutable ingested source files (audit trail)
+│   ├── competitive/     ← Reddit, news, analyst notes
+│   ├── regulatory/      ← RBI circulars, MeitY notifications
+│   ├── market/          ← industry reports, traffic data
+│   └── ambiguous/       ← sources spanning multiple treatments
+│
+├── state.json           ← pending Layer-2 queue, rejection log, health counts
+└── browser localStorage ← per-user query thread history, read state (orange dots)</div>
+
+<h4>What we keep — the filesystem, unchanged</h4>
+<p class="small"><strong>Decision (locked):</strong> the markdown files stay the single source of truth — exactly as on the laptop today. <code>index.md</code> and <code>log.md</code> remain LLM-maintained files; they are core to the LLM-wiki architecture and are <strong>not</strong> migrated into database tables. The only change for production is <em>where</em> the files live: a shared object-storage bucket (so the separate service containers can all reach them) instead of one laptop's disk. PostgreSQL is added <strong>alongside</strong> the files — only for what a file cannot safely hold: identity, roles, job state, and per-user private chat.</p>
+
+<h4>The split — what is a file vs. what is a row</h4>
+<table>
+<tr><th>Lives as a file (object storage)</th><th>Lives in PostgreSQL</th></tr>
+<tr><td>All <code>wiki/</code> pages — entities, regulatory, events, partners, market-signals, concepts, comparisons, sources</td><td>Users · roles · access requests (RBAC must not be world-readable)</td></tr>
+<tr><td><code>index.md</code> — master catalog (LLM-maintained)</td><td>Ingest jobs — async state the API and worker hand off through</td></tr>
+<tr><td><code>log.md</code> — append-only event log (LLM-maintained)</td><td>Query threads + turns — per-user private chat, cross-device</td></tr>
+<tr><td><code>scapia.md</code> — reference baseline</td><td>Cost / usage records — tokens + USD per query and per ingest</td></tr>
+<tr><td>All <code>raw/</code> source files (immutable audit trail)</td><td>Email subscribers + digest log</td></tr>
+</table>
+<p class="small">Rule of thumb: <strong>the wiki (the "outside view") is files; everything operational, relational, private, or stateful is Postgres.</strong> The agent's file tools (<code>read_page</code> / <code>write_page</code> / <code>read_raw</code>) behave exactly as today — they just read and write against the bucket instead of local disk. Nothing about the <code>CLAUDE.md</code> schema, citation discipline, or <code>index.md</code>/<code>log.md</code> maintenance changes.</p>
+
+<h4>Reads &amp; filtering — an in-memory index derived from the files</h4>
+<p class="small">The Vault, Intel Cards, and live feed filter pages by folder, signal, domain, page-type, posture. Rather than denormalise those into a database table, the backend builds a small <strong>in-memory catalog</strong> from the files' frontmatter at startup and refreshes the affected entry on every <code>write_page</code>. At the current scale (low hundreds of pages) this is sub-millisecond and removes any risk of a file and a database copy drifting apart. A materialised <code>pages_index</code> table is a <strong>known, deferred</strong> optimisation — adopted only if the page count grows into the tens of thousands, and even then it stays a pure derived cache: the files remain source of truth.</p>
+
+<h4>PostgreSQL — operational data only (never the wiki itself)</h4>
+
+<div class="schema">
+<h4><code>users</code> — one row per authenticated org account</h4>
+<p>Columns: <span class="col">id uuid PK</span> · <span class="col">email UNIQUE</span> (must end <code>@scapia.cards</code>) · <span class="col">name</span> · <span class="col">picture_url</span> · <span class="col">google_sub</span> (OIDC subject) · <span class="col">status</span> (<code>active</code> | <code>disabled</code>) · <span class="col">created_at</span> · <span class="col">last_login_at</span></p>
+</div>
+
+<div class="schema">
+<h4><code>user_roles</code> — additive roles (a user may hold more than one)</h4>
+<p>Columns: <span class="col">user_id → users</span> · <span class="col">role</span> (<code>leader</code> | <code>curator</code> | <code>admin</code>) · <span class="col">granted_by → users</span> · <span class="col">granted_at</span> · PK(user_id, role)</p>
+<p class="small">No row = baseline <em>viewer</em> (read-only). A user's capabilities are the union across their roles. Default admin seeded at deploy: <code>sarthak.atrish@scapia.cards</code>.</p>
+</div>
+
+<div class="schema">
+<h4><code>access_requests</code> — the "Request access" → admin-grant flow</h4>
+<p>Columns: <span class="col">id uuid PK</span> · <span class="col">user_id → users</span> · <span class="col">requested_role</span> (<code>leader</code> | <code>curator</code>) · <span class="col">reason</span> · <span class="col">status</span> (<code>pending</code> | <code>granted</code> | <code>denied</code>) · <span class="col">decided_by → users</span> · <span class="col">created_at</span> · <span class="col">decided_at</span></p>
+<p class="small">One open request per user per role. A <code>pending</code> row is what raises the flag in the Admin page's request queue.</p>
+</div>
+
+<div class="schema">
+<h4><code>ingest_jobs</code> — async job state machine + full agent trace (the API → worker hand-off)</h4>
+<p>Columns: <span class="col">id uuid PK</span> · <span class="col">raw_path</span> · <span class="col">submitted_by → users</span> · <span class="col">status</span> · <span class="col">agent_trace jsonb</span> · <span class="col">result jsonb</span> · <span class="col">error</span> · <span class="col">created_at</span> · <span class="col">updated_at</span> · <span class="col">completed_at</span></p>
+<p>Status values: <code>queued</code> · <code>running</code> · <code>completed</code> · <code>layer2</code> · <code>rejected</code> · <code>failed</code> · <code>cost_capped</code></p>
+<p class="small">Replaces today's <code>state.json</code> queue. The API writes a <code>queued</code> row; the ingest-worker container polls, runs the agent, and updates status — no message broker needed. (The <em>wiki</em> event log stays in <code>log.md</code>; this table is job plumbing, not the audit log.)</p>
+</div>
+
+<div class="schema">
+<h4><code>query_threads</code> — groups a user's follow-up questions into one chat (moves chat history off browser localStorage, cross-device)</h4>
+<p>Columns: <span class="col">id uuid PK</span> · <span class="col">user_id → users</span> · <span class="col">title</span> · <span class="col">created_at</span> · <span class="col">updated_at</span></p>
+<p>Index: (user_id, updated_at DESC)</p>
+</div>
+
+<div class="schema">
+<h4><code>query_log</code> — every Q&amp;A turn (doubles as the per-query cost record)</h4>
+<p>Columns: <span class="col">id bigserial PK</span> · <span class="col">thread_id → query_threads</span> · <span class="col">position int</span> · <span class="col">user_id → users</span> · <span class="col">question text</span> · <span class="col">answer text</span> · <span class="col">pages_read text[]</span> · <span class="col">input_tokens</span> · <span class="col">output_tokens</span> · <span class="col">cost_usd</span> · <span class="col">created_at</span></p>
+<p>Indexes: (thread_id, position) · (user_id, created_at DESC)</p>
+</div>
+
+<div class="schema">
+<h4><code>ingest_cost_log</code> — token + cost record per ingest job</h4>
+<p>Columns: <span class="col">job_id → ingest_jobs</span> · <span class="col">user_id → users</span> · <span class="col">input_tokens</span> · <span class="col">output_tokens</span> · <span class="col">cost_usd</span> · <span class="col">created_at</span></p>
+</div>
+
+<div class="schema">
+<h4><code>subscribers</code> &amp; <code>digest_log</code> — daily email digest</h4>
+<p><code>subscribers</code>: id · email · name · paused · created_at</p>
+<p><code>digest_log</code>: id · sent_at · subscriber_email · source_slugs text[] · provider_message_id (idempotency)</p>
+</div>
+
+<h4>Views (read-only aggregations the backend queries)</h4>
+<table>
+<tr><th>View</th><th>What it returns</th><th>Used by</th></tr>
+<tr><td><code>user_daily_usage</code></td><td>Per-user counts + sums for today (queries · input tokens · output tokens) — aggregates <code>query_log</code> + <code>ingest_cost_log</code></td><td>Cost cap pre-flight; sidebar usage display</td></tr>
+<tr><td><code>monthly_spend</code></td><td>Total USD across all users for the current month</td><td>Monthly hard-kill check</td></tr>
+<tr><td><code>cost_velocity_hourly</code></td><td>SUM(cost_usd) WHERE created_at &gt; now() − 1 hour</td><td>Cost velocity tripwire</td></tr>
+</table>
+
+<h4>Feed &amp; catalog — derived from files, not a table</h4>
+<ul>
+  <li>The live feed (today's <code>sources</code> idea) is built in-memory from the frontmatter of <code>wiki/sources/*.md</code> — no <code>sources</code> table, no trigger to keep in sync.</li>
+  <li>On every <code>write_page</code>, the backend re-parses that one file's frontmatter and updates its in-memory catalog entry. The file is always the truth; the catalog is a disposable cache rebuildable from disk at any time.</li>
+</ul>
+
+<h4>Row-Level Security (defense in depth)</h4>
+<ul>
+  <li><code>query_threads</code> + <code>query_log</code>: <code>USING (user_id = current_user_id())</code> — a user can <strong>never</strong> read another user's chats even if the backend has a bug.</li>
+  <li><code>access_requests</code>: a user sees only their own rows; only <code>admin</code> sees the full queue.</li>
+  <li>All other tables: read open to authenticated users; writes go through the backend's service-role key only.</li>
+</ul>
+
+<h4>Object storage — the wiki + raw, as files</h4>
+<ul>
+  <li>One private bucket holding the working tree: <code>wiki/</code> (all pages incl. <code>index.md</code>, <code>log.md</code>, <code>scapia.md</code>) and <code>raw/</code> (immutable submitted sources).</li>
+  <li>Paths mirror today's layout exactly — <code>wiki/entities/...</code>, <code>raw/competitive/...</code> — so nothing in <code>CLAUDE.md</code> or the agent's tools has to change.</li>
+  <li><code>raw/</code> is write-once (audit trail); the agent's <code>read_raw</code> / <code>upload_raw</code> tools touch only this prefix. <code>wiki/</code> is read-write via <code>read_page</code> / <code>write_page</code>.</li>
+  <li>Locally this is a mounted volume (or MinIO); in production a managed object store. The backend talks to it through one storage adapter, so local and prod differ only in config.</li>
+</ul>
+
+<h4>Cost &amp; usage tracking — what gets stored on every LLM call</h4>
+<table>
+<tr><th>Surface</th><th>Stored where</th><th>Fields</th></tr>
+<tr><td>Every query turn</td><td><code>query_log</code> (one row per turn)</td><td>question · answer · pages_read · input_tokens · output_tokens · cost_usd</td></tr>
+<tr><td>Every ingest job</td><td><code>ingest_cost_log</code> (one row per job)</td><td>job_id · input_tokens · output_tokens · cost_usd</td></tr>
+<tr><td>Filter calls (Maker · Checker · Intent)</td><td>Folded into the parent job/query row (input/output tokens aggregated)</td><td>(no separate table — keeps the cost surface simple)</td></tr>
+</table>
+<p class="small">Daily caps and monthly limits are <strong>computed from these two tables</strong> — no separate counters to keep in sync. The cost-cap pre-flight check is a single indexed SUM under 5 ms.</p>
+
+<h4>Query history saving — explicit</h4>
+<ul>
+  <li>Today: stored only in the user's <strong>browser localStorage</strong> — lost on browser switch / clear cache.</li>
+  <li>Production: stored in <code>query_threads</code> + <code>query_log</code> scoped to <code>user_id</code>. Cross-device, durable, and the same rows power cost-cap aggregation.</li>
+  <li>RLS makes one user's chats invisible to every other user at the DB level — not just at the API layer.</li>
+  <li>Wiki pages are <strong>never</strong> joined to query tables — strict separation between "outside view" (wiki) and "inside view" (a user's chat).</li>
+</ul>
+
+<hr>
+
+<h2><span class="tag">3</span> Full system, one picture</h2>
+
+<div class="diag">                        ┌─────────────────────────────────────┐
+                        │   USERS (leaders + curators)        │
+                        └────────────────┬────────────────────┘
+                                         │ HTTPS
+                                         ▼
+       ┌─────────────────────────────────────────────────────────────┐
+       │   STATIC HOST  ──  React app · SPA rewrites · CDN cache     │
+       └────────────────────────────┬────────────────────────────────┘
+                                    │  fetch /api/*  +  Bearer JWT
+                                    ▼
+       ┌─────────────────────────────────────────────────────────────┐
+       │   BACKEND  (FastAPI)                                        │
+       │   ├ Auth middleware  → role lookup                          │
+       │   ├ Read endpoints   (/api/pages /page /feed /me …)         │
+       │   ├ Query endpoint   (SSE streaming · cost-cap pre-flight)  │
+       │   ├ Submit endpoint  (BackgroundTask → agent loop)          │
+       │   ├ Curator endpoints (/jobs /layer2 /ingest-log)           │
+       │   ├ Internal endpoints (/internal/* · scheduled jobs)       │
+       │   └ Guarded LLM client  (8-layer cost / rate / circuit)     │
+       └─────┬──────────────────────┬───────────────────────┬────────┘
+             │                      │                       │
+             ▼                      ▼                       ▼
+      ┌────────────┐         ┌──────────────┐        ┌──────────────┐
+      │ Identity   │         │ PostgreSQL   │        │ Object store │
+      │ Google     │         │ (operational │        │ (the wiki,   │
+      │ OIDC       │         │  data only)  │        │  as files)   │
+      └────────────┘         │ users        │        │ wiki/        │
+                             │ user_roles   │        │  index.md    │
+                             │ access_reqs  │        │  log.md      │
+                             │ ingest_jobs  │        │  entities/…  │
+                             │ query_threads│        │ raw/         │
+                             │ query_log    │        └──────────────┘
+                             │ ingest_cost  │
+                             │ subscribers  │              ┌─────────────┐
+                             │ digest_log   │              │ LLM API     │
+                             └──────────────┘              │ (Haiku +    │
+                                  ▲                        │  Sonnet)    │
+   in-memory catalog + feed ─────┘  (derived from files)   └─────────────┘
+                                    ▲
+                                    │ scheduled (every N min / daily / nightly)
+                       ┌────────────┴───────────┐
+                       │ Scheduler              │
+                       │ • daily digest         │ ──► email service ──► subscriber inboxes
+                       │ • nightly snapshot     │ ──► DB → markdown → git
+                       │ • keepalive           │
+                       └────────────────────────┘</div>
+
+<h2><span class="tag mut">·</span> What we will need from the infra side, in plain English</h2>
+
+<table>
+<tr><th>Layer</th><th>What we need (no specifics)</th></tr>
+<tr><td>Frontend</td><td>A place to host static files with HTTPS, a custom domain, SPA-style routing, and CDN-cached assets. A build step on every push.</td></tr>
+<tr><td>Backend</td><td>A long-running Python process reachable on HTTPS. Must talk outbound to the LLM API. Async event loop, ~512 MB–2 GB memory, restarts cleanly on deploy.</td></tr>
+<tr><td>Database</td><td>A managed PostgreSQL holding <strong>operational data only</strong> (users, roles, jobs, chat history, cost) — never the wiki itself. Private; only the backend reaches it. Automated daily backups.</td></tr>
+<tr><td>Object storage</td><td>One private bucket holding the wiki working tree as files — <code>wiki/</code> (incl. <code>index.md</code>, <code>log.md</code>) and <code>raw/</code>. Backend has read/write; nobody else does. This is the source of truth, so it needs versioning + daily backup.</td></tr>
+<tr><td>Email</td><td>A transactional email sender with a verified Scapia-owned sending domain. Used for the daily digest and access-request notifications.</td></tr>
+<tr><td>Identity / Auth</td><td><strong>Google OAuth / OIDC</strong> restricted to the <code>@scapia.cards</code> hosted domain. The backend performs the OAuth code exchange, verifies the <code>hd</code> claim, and issues its own session JWT — no third-party auth vendor required. Needs a Google OAuth client (ID + secret + redirect URIs) created under the org's Google Workspace.</td></tr>
+<tr><td>Secrets</td><td>A secure store for API keys, DB password, JWT signing key, internal secret. Backend reads at startup.</td></tr>
+<tr><td>Scheduler</td><td>A way to call three internal HTTP endpoints on a schedule (daily, nightly, every-N-minutes).</td></tr>
+<tr><td>Observability</td><td>Logs from the backend captured centrally. Alerts on error spikes, OOM, DB CPU.</td></tr>
+<tr><td>CI / Deploy</td><td>On every push to <code>main</code>: build frontend → publish; build backend container → restart. Whatever standard pattern the team uses.</td></tr>
+</table>
+
+<p class="small" style="margin-top:24px">Architecture brief · current state vs. hosted state · no vendor-specific recommendations · the repository's <code>DEPLOYMENT-ARCHITECTURE.md</code>, <code>KNOWLEDGE-TRANSFER.md</code>, and <code>CLAUDE.md</code> are the long-form references behind this summary.</p>
+
+</div>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { fetchPages } from '../api.js'
+import { useUser, canCurate, isAdmin } from '../auth/user.js'
 
 const NavItem = ({ to, icon, label }) => (
   <NavLink
@@ -38,6 +39,7 @@ export default function Sidebar() {
   const [activeThreadId, setActiveThreadId] = useState(null)
   const [hoveredIdx, setHoveredIdx] = useState(null)
   const navigate = useNavigate()
+  const user = useUser()
 
   // Refresh on storage changes (other tabs) and on focus
   useEffect(() => {
@@ -177,13 +179,17 @@ export default function Sidebar() {
       {/* Divider */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }} />
 
-      {/* Nav Items */}
+      {/* Nav Items — gated by capability. Viewer baseline keeps the read
+          surfaces (Intel Cards, Wiki Browser); query/curate/admin appear with
+          the role. Intelligence is shown to all but route-guarded (a viewer
+          gets the access card). */}
       <div className="px-3 py-3 flex flex-col gap-0.5">
         <NavItem to="/intelligence" icon="💬" label="Intelligence" />
         <NavItem to="/battlecards" icon="🃏" label="Intel Cards" />
         <NavItem to="/wiki" icon="📚" label="Wiki Browser" />
-        <NavItem to="/curator" icon="🗂️" label="Curator Queue" />
-        <NavItem to="/submit" icon="📤" label="Submit" />
+        {canCurate(user) && <NavItem to="/curator" icon="🗂️" label="Curator Queue" />}
+        {canCurate(user) && <NavItem to="/submit" icon="📤" label="Submit" />}
+        {isAdmin(user) && <NavItem to="/admin" icon="🛡️" label="Admin" />}
       </div>
     </aside>
   )

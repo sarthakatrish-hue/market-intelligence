@@ -6,6 +6,9 @@
 # Local runtime state (server.py recreates this on first run)
 state.json
 
+# Auth store — roles + access requests (must never be world-readable / committed)
+auth_store.json
+
 # Python
 __pycache__/
 *.py[cod]

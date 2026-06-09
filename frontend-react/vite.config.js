@@ -9,6 +9,12 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
+      // OAuth callback lives at /auth/callback (matches the registered prod
+      // redirect URI) — forward it to the backend, not the SPA.
+      '/auth': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
     },
   },
   build: {

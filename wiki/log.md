@@ -23,3 +23,7 @@ Entry format: `## [YYYY-MM-DD] <operation> | <description>`
 ## [2026-06-03] query/meta | what can you do
 
 ## [2026-06-03] query/greeting | good evening
+
+## [2026-06-09] query/out_of_scope | kjsd
+
+## [2026-06-09] query/out_of_scope | lihi
